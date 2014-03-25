@@ -21,12 +21,12 @@ public:
 
 	int		detect();
 	cv::Mat getResult();
-	int		doSLICO();
-	int		getPictures( vector<string>& picvec );
-	void	createPicBuffer(const QString		filename,
-								UINT*&		imgBuffer,
-								int&		width,
-								int&		height) const;
+	int		doSLICO( const QString filename,
+					 const QString saveLocation );
+	void	createPicBuffer(const QString filename,
+							UINT*&	imgBuffer,
+							int&	width,
+							int&	height) const;
 
 private:
 	int mSpcount;

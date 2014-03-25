@@ -8,6 +8,10 @@
 
 SkyDetect::SkyDetect()
 {
+	mSpcount = 300;
+	mCompactness = 10.0;
+
+
 }
 
 SkyDetect::~SkyDetect(void)
@@ -23,69 +27,67 @@ int SkyDetect::detect()
 {
 
 	mImageRes = mImageIn;
-	doSLICO();
+
+	QString saveLocation = "C:\\Users\\Durcak\\Desktop\\SLIC";
+	QString filename	 = "D:\\Fotky+Obrazky\\labut.jpg";
+	doSLICO( filename, saveLocation);
 
 	return 0;
 }
 
-int SkyDetect::doSLICO()
+int SkyDetect::doSLICO( const QString filename, const QString saveLocation )
 {
 
-	vector<string> picvec(0);
-	picvec.resize(0);
-	getPictures(picvec);//user chooses one or more pictures
-	string saveLocation = "C:\\Users\\Durcak\\Desktop\\SLIC";
-	int numPics( picvec.size() );
-	mSpcount = 200;
-	mCompactness = 10.0;
-	if( mSpcount < 100) mSpcount = 200;
+	string stdSaveLoc   = saveLocation.toStdString();
+	string stdFilename  = filename.toStdString();
 
+	UINT *imgBuf		= NULL;
+	int	width			= 0;
+	int height			= 0;
 
+	createPicBuffer( filename, imgBuf, width, height );
 
-	for( int k = 0; k < numPics; k++ )
-	{
-		UINT *imgBuf	= NULL;
-		int	width	= 0;
-		int height	= 0;
+	int size = width * height;
 
-		createPicBuffer( QString::fromStdString(picvec[k]), imgBuf, width, height );
-
-		int sz = width*height;
-		if( mSpcount > sz) { cout << "Number of superpixels exceeds number of pixels in the image" << endl; }
-
-		int* labels = new int[sz];
-		int numlabels(0);
-		//return 0;
-		qDebug() << "krok 1 " << endl;
-		mSlic.PerformSLICO_ForGivenK(imgBuf, width, height, labels, numlabels, mSpcount, mCompactness);//for a given number K of superpixels
-		qDebug() << "krok 2 " << endl;
-		mSlic.DrawContoursAroundSegmentsTwoColors(imgBuf, labels, width, height);//for black-and-white contours around superpixels
-		qDebug() << "krok 3 " << endl;
-		mSlic.SaveSuperpixelLabels(labels,width,height,picvec[k],saveLocation);
-		qDebug() << "krok 4 " << endl;
-		if(labels) delete [] labels;
-
-		cv::Mat  resMat( height, width, CV_8UC4, imgBuf );
-		cout << "res";
-		cv::imshow("res", resMat );
-		cv::waitKey(0);
-
+	if( mSpcount < 200){
+		mSpcount = 200;
 	}
+	if( mSpcount > size) {
+		qDebug() << "Number of superpixels exceeds number of pixels in the image";
+	}
+
+	int* labels = new int[size];
+	int numlabels = 0;
+
+
+
+	mSlic.PerformSLICO_ForGivenK( imgBuf, width, height, labels, numlabels, mSpcount, mCompactness ); //for a given number K of superpixels
+	qDebug() << " - PerformSLICO_ForGivenK:	Done";
+
+	mSlic.DrawContoursAroundSegmentsTwoColors( imgBuf, labels, width, height );//for black-and-white contours around superpixels
+	qDebug() << " - DrawContoursAroundSegmentsTwoColors: Done";
+
+	mSlic.SaveSuperpixelLabels( labels, width, height, stdFilename, stdSaveLoc);
+	qDebug() << " - SaveSuperpixelLabels: Done";
+
+	if(labels){
+		delete [] labels;
+	}
+
+
+	cv::Mat  resMat( height, width, CV_8UC4, imgBuf );
+	cv::imshow("SLICO result image", resMat );
+	cv::waitKey(0);
+
 	return 0;
 }
 
-int SkyDetect::getPictures( vector<string>& picvec ){
-
-	string name = "D:\\Fotky+Obrazky\\labut.jpg";
-	picvec.push_back(name);
-	return 0;
-}
 
 void SkyDetect::createPicBuffer(
-	const QString	filename,
-	UINT*&			imgBuffer,
-	int&			width,
-	int&			height) const
+		const QString	filename,
+		UINT*&			imgBuffer,
+		int&			width,
+		int&			height) const
 {
 	cv::Mat inMat;
 	inMat = cv::imread( filename.toStdString(), CV_LOAD_IMAGE_COLOR);
