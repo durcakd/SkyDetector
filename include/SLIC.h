@@ -1,3 +1,6 @@
+#ifndef  __SLIC_H__
+#define __SLIC_H__
+
 // SLIC.h: interface for the SLIC class.
 //===========================================================================
 // This code implements the zero parameter superpixel segmentation technique
@@ -32,7 +35,7 @@
 using namespace std;
 
 
-class SLIC  
+class SLIC
 {
 public:
 	SLIC();
@@ -210,3 +213,4 @@ private:
 };
 
 
+#endif

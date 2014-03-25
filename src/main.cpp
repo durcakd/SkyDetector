@@ -1,5 +1,6 @@
-#include "SkyDetect.h"
+#include <opencv2/highgui/highgui.hpp>
 
+#include "SkyDetect.h"
 
 int main(void){
 

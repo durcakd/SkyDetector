@@ -1,13 +1,15 @@
 #include "SkyDetect.h"
-#include <iostream>
 
+#include <opencv2\highgui\highgui.hpp>
 #include <opencv2\imgproc\imgproc.hpp>
 
 #include <QDebug>
 
+#include "SLIC.h"
 
 SkyDetect::SkyDetect()
 {
+	mSlico = new SLIC();
 	mSpcount = 300;
 	mCompactness = 10.0;
 
@@ -30,18 +32,18 @@ int SkyDetect::detect()
 
 	QString saveLocation = "C:\\Users\\Durcak\\Desktop\\SLIC";
 	QString filename	 = "D:\\Fotky+Obrazky\\labut.jpg";
-	doSLICO( filename, saveLocation);
+	doSlico( filename, saveLocation);
 
 	return 0;
 }
 
-int SkyDetect::doSLICO( const QString filename, const QString saveLocation )
+int SkyDetect::doSlico( const QString filename, const QString saveLocation )
 {
 
 	string stdSaveLoc   = saveLocation.toStdString();
 	string stdFilename  = filename.toStdString();
 
-	UINT *imgBuf		= NULL;
+	unsigned int *imgBuf		= NULL;
 	int	width			= 0;
 	int height			= 0;
 
@@ -61,13 +63,16 @@ int SkyDetect::doSLICO( const QString filename, const QString saveLocation )
 
 
 
-	mSlic.PerformSLICO_ForGivenK( imgBuf, width, height, labels, numlabels, mSpcount, mCompactness ); //for a given number K of superpixels
+	mSlico->PerformSLICO_ForGivenK(
+				imgBuf, width, height, labels, numlabels, mSpcount, mCompactness ); //for a given number K of superpixels
 	qDebug() << " - PerformSLICO_ForGivenK:	Done";
 
-	mSlic.DrawContoursAroundSegmentsTwoColors( imgBuf, labels, width, height );//for black-and-white contours around superpixels
+	mSlico->DrawContoursAroundSegmentsTwoColors(
+				imgBuf, labels, width, height );//for black-and-white contours around superpixels
 	qDebug() << " - DrawContoursAroundSegmentsTwoColors: Done";
 
-	mSlic.SaveSuperpixelLabels( labels, width, height, stdFilename, stdSaveLoc);
+	mSlico->SaveSuperpixelLabels(
+				labels, width, height, stdFilename, stdSaveLoc);
 	qDebug() << " - SaveSuperpixelLabels: Done";
 
 	if(labels){
@@ -75,8 +80,8 @@ int SkyDetect::doSLICO( const QString filename, const QString saveLocation )
 	}
 
 
-	cv::Mat  resMat( height, width, CV_8UC4, imgBuf );
-	cv::imshow("SLICO result image", resMat );
+	mSlicoRes = cv::Mat( height, width, CV_8UC4, imgBuf );
+	cv::imshow("SLICO result image", mSlicoRes );
 	cv::waitKey(0);
 
 	return 0;
@@ -85,7 +90,7 @@ int SkyDetect::doSLICO( const QString filename, const QString saveLocation )
 
 void SkyDetect::createPicBuffer(
 		const QString	filename,
-		UINT*&			imgBuffer,
+		unsigned int*&			imgBuffer,
 		int&			width,
 		int&			height) const
 {
