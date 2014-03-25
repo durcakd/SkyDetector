@@ -6,6 +6,8 @@
 #include <opencv2\core\core.hpp>
 #include <opencv2\highgui\highgui.hpp>
 
+#include <QString>
+
 #include "SLIC.h"
 typedef unsigned int UINT;
 
@@ -21,10 +23,10 @@ public:
 	cv::Mat getResult();
 	int		doSLICO();
 	int		getPictures( vector<string>& picvec );
-	void	getPictureBuffer( string&		filename,
+	void	createPicBuffer(const QString		filename,
 								UINT*&		imgBuffer,
 								int&		width,
-								int&		height);
+								int&		height) const;
 
 private:
 	int mSpcount;
