@@ -4,37 +4,43 @@
 #include <vector>
 
 #include <opencv2\core\core.hpp>
-#include <opencv2\highgui\highgui.hpp>
 
-#include "SLIC.h"
-typedef unsigned int UINT;
+#include <QString>
+
+class SLIC;
+//typedef unsigned int UINT;
 
 using namespace std;
 
 class SkyDetect
 {
 public:
+
 	SkyDetect( );
 	~SkyDetect(void);
 
 	int		detect();
 	cv::Mat getResult();
-	int		doSLICO();
-	int		getPictures( vector<string>& picvec );
-	void	getPictureBuffer( string&		filename,
-								UINT*&		imgBuffer,
-								int&		width,
-								int&		height);
+
+	int		doSlico( const QString filename,
+					 const QString saveLocation );
+
+	void	createPicBuffer(const QString filename,
+							unsigned int*&	imgBuffer,
+							int&	width,
+							int&	height) const;
+
 
 private:
-	int mSpcount;
-	double mCompactness;
-	SLIC mSlic;
 
+	int		mSpcount;
+	double	mCompactness;
+	SLIC	*mSlico;
 
 	cv::Mat mImageIn;
 	cv::Mat mImage2;
 	cv::Mat mImageRes;
+	cv::Mat mSlicoRes;
 };
 
 #endif

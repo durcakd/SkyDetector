@@ -1,11 +1,19 @@
 #include "SkyDetect.h"
-#include <iostream>
 
+#include <opencv2\highgui\highgui.hpp>
 #include <opencv2\imgproc\imgproc.hpp>
 
+#include <QDebug>
+
+#include "SLIC.h"
 
 SkyDetect::SkyDetect()
 {
+	mSlico = new SLIC();
+	mSpcount = 300;
+	mCompactness = 10.0;
+
+
 }
 
 SkyDetect::~SkyDetect(void)
@@ -21,103 +29,96 @@ int SkyDetect::detect()
 {
 
 	mImageRes = mImageIn;
-	doSLICO();
+
+	QString saveLocation = "C:\\Users\\Durcak\\Desktop\\SLIC";
+	QString filename	 = "D:\\Fotky+Obrazky\\labut.jpg";
+	doSlico( filename, saveLocation);
 
 	return 0;
 }
 
-int SkyDetect::doSLICO()
+int SkyDetect::doSlico( const QString filename, const QString saveLocation )
 {
-	
-	vector<string> picvec(0);
-	picvec.resize(0);
-	getPictures(picvec);//user chooses one or more pictures
-	string saveLocation = "C:\\Users\\Durcak\\Desktop\\SLIC";
-	int numPics( picvec.size() );
-	mSpcount = 200;
-	mCompactness = 10.0;
-	if( mSpcount < 100) mSpcount = 200;
 
+	string stdSaveLoc   = saveLocation.toStdString();
+	string stdFilename  = filename.toStdString();
 
+	unsigned int *imgBuf		= NULL;
+	int	width			= 0;
+	int height			= 0;
 
-	for( int k = 0; k < numPics; k++ )
-	{
-		UINT* img = NULL;
-		int width(0);
-		int height(0);
+	createPicBuffer( filename, imgBuf, width, height );
 
-		getPictureBuffer( picvec[k], img, width, height );
+	int size = width * height;
 
-		int sz = width*height;
-		if( mSpcount > sz) { cout << "Number of superpixels exceeds number of pixels in the image" << endl; }
-
-		int* labels = new int[sz];
-		int numlabels(0);
-		//return 0;
-		cout << "krok 1 " << endl;
-		mSlic.PerformSLICO_ForGivenK(img, width, height, labels, numlabels, mSpcount, mCompactness);//for a given number K of superpixels
-		cout << "krok 2 " << endl;
-		mSlic.DrawContoursAroundSegmentsTwoColors(img, labels, width, height);//for black-and-white contours around superpixels
-		cout << "krok 3 " << endl;
-		mSlic.SaveSuperpixelLabels(labels,width,height,picvec[k],saveLocation);
-		cout << "krok 4 " << endl;
-		if(labels) delete [] labels;
-		
-		cv::Mat  res( height, width, CV_8UC4, img );
-		cout << "res";
-		cv::imshow("res", res);
-		cv::waitKey(0);
-
+	if( mSpcount < 200){
+		mSpcount = 200;
 	}
-	cout << "Done";
-	return 0;
-}
+	if( mSpcount > size) {
+		qDebug() << "Number of superpixels exceeds number of pixels in the image";
+	}
 
-int SkyDetect::getPictures( vector<string>& picvec ){
-
-	string name = "D:\\Fotky+Obrazky\\labut.jpg";
-	picvec.push_back(name);
-	return 0;
-}
-
-void SkyDetect::getPictureBuffer(
-	string&			filename,
-	UINT*&				imgBuffer,
-	int&				width,
-	int&				height)
-{
-	cv::Mat matImg;
-	matImg = cv::imread(filename, CV_LOAD_IMAGE_COLOR);
-	
-	height					= matImg.rows;
-	width					= matImg.cols;
-	long imgSize			= height*width;
-	cout << "height:  " << height << endl;
-	cout << "width:  " << width << endl;
-	cout << "type:   " << matImg.type() << endl;
-	cout << "depth:  " << matImg.depth() << endl;
-	cv::imshow( "img1", matImg );
-	//cv::waitKey(0);
-	
+	int* labels = new int[size];
+	int numlabels = 0;
 
 
 
+	mSlico->PerformSLICO_ForGivenK(
+				imgBuf, width, height, labels, numlabels, mSpcount, mCompactness ); //for a given number K of superpixels
+	qDebug() << " - PerformSLICO_ForGivenK:	Done";
+
+	mSlico->DrawContoursAroundSegmentsTwoColors(
+				imgBuf, labels, width, height );//for black-and-white contours around superpixels
+	qDebug() << " - DrawContoursAroundSegmentsTwoColors: Done";
+
+	mSlico->SaveSuperpixelLabels(
+				labels, width, height, stdFilename, stdSaveLoc);
+	qDebug() << " - SaveSuperpixelLabels: Done";
+
+	if(labels){
+		delete [] labels;
+	}
 
 
-	cv::Mat alpha(cv::Size(width, height), CV_8UC1);
-    cv::Mat src(cv::Size(width, height),CV_8UC4);
-	cv::Mat in[] = {  alpha, matImg };
-    int from_to[] = { 0,3,  1,0,  2,1,  3,2 };
-    cv::mixChannels( in, 2, &src, 1, from_to, 4 );
-
-	cout << "type2:" << src.type() << endl;
-	cout << "depth2:" << src.depth() << endl;
-	
-	cv::imshow( "img2", src );
-	//cv::waitKey(0);
-	
-	imgBuffer = new UINT[imgSize];
-	memcpy((void*) imgBuffer, src.data, imgSize*sizeof(UINT) );
+	mSlicoRes = cv::Mat( height, width, CV_8UC4, imgBuf );
+	cv::imshow("SLICO result image", mSlicoRes );
 	cv::waitKey(0);
-	
+
+	return 0;
+}
+
+
+void SkyDetect::createPicBuffer(
+		const QString	filename,
+		unsigned int*&			imgBuffer,
+		int&			width,
+		int&			height) const
+{
+	cv::Mat inMat;
+	inMat = cv::imread( filename.toStdString(), CV_LOAD_IMAGE_COLOR);
+
+	height					= inMat.rows;
+	width					= inMat.cols;
+	long imgSize			= height * width;
+
+	qDebug() << "INPUT: " << filename;
+	qDebug() << "type:  " << inMat.type() << "  " << width << "x" << height;
+	//cv::imshow( "Input Image", inMat );
+
+
+
+	// create ARGB 4x8bits picture
+	cv::Mat alpha(cv::Size(width, height), CV_8UC1);
+	cv::Mat outMat(cv::Size(width, height),CV_8UC4);
+	cv::Mat in[] = {  alpha, inMat };
+	int from_to[] = { 0,3,  1,0,  2,1,  3,2 };
+	cv::mixChannels( in, 2, &outMat, 1, from_to, 4 );
+
+	qDebug() << "type2: " << outMat.type();
+	//cv::imshow( "Input Image2", outMat );
+	//cv::waitKey(1);
+
+
+	imgBuffer = new UINT[imgSize];
+	memcpy((void*) imgBuffer, outMat.data, imgSize*sizeof(UINT) );
 }
