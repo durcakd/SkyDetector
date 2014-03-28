@@ -712,6 +712,7 @@ void SLIC::SaveSuperpixelLabels(
 	for( int i = 0; i < sz; i++ )
 	{
 		outfile.write((const char*)&labels[i], sizeof(int));
+		
 	}
 	outfile.close();
 }

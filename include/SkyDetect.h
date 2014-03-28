@@ -29,6 +29,7 @@ public:
 							unsigned int*&	imgBuffer,
 							int&	width,
 							int&	height) const;
+	cv::Mat createSPLabelsMat( const int* labels, const int width, const int height);
 
 
 private:

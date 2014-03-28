@@ -10,7 +10,7 @@
 SkyDetect::SkyDetect()
 {
 	mSlico = new SLIC();
-	mSpcount = 300;
+	mSpcount = 255;
 	mCompactness = 10.0;
 
 
@@ -30,8 +30,8 @@ int SkyDetect::detect()
 
 	mImageRes = mImageIn;
 
-	QString saveLocation = "C:\\Users\\Durcak\\Desktop\\SLIC";
-	QString filename	 = "D:\\Fotky+Obrazky\\labut.jpg";
+	QString saveLocation = "C:\\Users\\Durcak\\Desktop\\SLICO";
+	QString filename	 = "C:\\Users\\Durcak\\Desktop\\SLICO\\flower.jpg";
 	doSlico( filename, saveLocation);
 
 	return 0;
@@ -75,14 +75,18 @@ int SkyDetect::doSlico( const QString filename, const QString saveLocation )
 				labels, width, height, stdFilename, stdSaveLoc);
 	qDebug() << " - SaveSuperpixelLabels: Done";
 
-	if(labels){
-		delete [] labels;
-	}
 
 
 	mSlicoRes = cv::Mat( height, width, CV_8UC4, imgBuf );
 	cv::imshow("SLICO result image", mSlicoRes );
 	cv::waitKey(0);
+	cv::Mat labMat = createSPLabelsMat( labels, width, height);
+	cv::imshow("labMat", labMat );
+	cv::waitKey(0);
+
+	if(labels){
+		delete [] labels;
+	}
 
 	return 0;
 }
@@ -122,3 +126,32 @@ void SkyDetect::createPicBuffer(
 	imgBuffer = new UINT[imgSize];
 	memcpy((void*) imgBuffer, outMat.data, imgSize*sizeof(UINT) );
 }
+
+cv::Mat SkyDetect::createSPLabelsMat( const int*	labels, const int	width, const int	height)
+{
+	cv::Mat matLab2(cv::Size(width, height), CV_16UC1);
+	cv::Mat matLab8(cv::Size(width, height), CV_8UC1);
+
+	int idx = 0;
+
+	for(int i = 0; i < height; i++){
+		for(int j = 0; j < width; j++){
+			matLab2.at<unsigned short>(i,j)= (unsigned short) labels[idx++];
+		}
+	}
+
+	/*for( int i = 0; i < height; i++){
+		unsigned short* rowi = matLab2.ptr<unsigned short>(i);
+
+		for( int j = 0; j < width; j++){
+			rowi[j] = (unsigned short) labels[idx++];
+		}
+	}*/
+	matLab2.convertTo(matLab8, CV_8UC1);
+
+
+	return matLab8;
+
+
+}
+
