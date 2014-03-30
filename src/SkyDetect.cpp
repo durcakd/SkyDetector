@@ -80,8 +80,12 @@ int SkyDetect::doSlico( const QString filename, const QString saveLocation )
 	mSlicoRes = cv::Mat( height, width, CV_8UC4, imgBuf );
 	cv::imshow("SLICO result image", mSlicoRes );
 	cv::waitKey(0);
+
+	cv::Mat masked;
 	cv::Mat labMat = createSPLabelsMat( labels, width, height);
-	cv::imshow("labMat", labMat );
+
+	//mSlicoRes.copyTo(masked, labMat);
+	//cv::imshow("labMat", masked );
 	cv::waitKey(0);
 
 	if(labels){
@@ -129,17 +133,23 @@ void SkyDetect::createPicBuffer(
 
 cv::Mat SkyDetect::createSPLabelsMat( const int*	labels, const int	width, const int	height)
 {
-	cv::Mat matLab2(cv::Size(width, height), CV_16UC1);
+	//cv::Mat matLab2(cv::Size(width, height), CV_16UC1);
+	cv::Mat matLab2(cv::Size(width, height), CV_32SC1);
 	cv::Mat matLab8(cv::Size(width, height), CV_8UC1);
 
 	int idx = 0;
 
 	for(int i = 0; i < height; i++){
 		for(int j = 0; j < width; j++){
-			matLab2.at<unsigned short>(i,j)= (unsigned short) labels[idx++];
+			matLab2.at<int>(i,j)= labels[idx++];
 		}
 	}
 
+	/*for(int i = 0; i < height; i++){
+		for(int j = 0; j < width; j++){
+			matLab2.at<unsigned short>(i,j)= (unsigned short) labels[idx++];
+		}
+	}*/
 	/*for( int i = 0; i < height; i++){
 		unsigned short* rowi = matLab2.ptr<unsigned short>(i);
 
@@ -147,8 +157,40 @@ cv::Mat SkyDetect::createSPLabelsMat( const int*	labels, const int	width, const 
 			rowi[j] = (unsigned short) labels[idx++];
 		}
 	}*/
+
+
+
+
+
+
+
 	matLab2.convertTo(matLab8, CV_8UC1);
 
+	cv::imshow("labdd", matLab8 );
+
+
+	cv::Mat tresh1;
+	cv::Mat tresh2;
+	cv::Mat tresh3;
+
+	cv::threshold(matLab8, tresh1, 80, 82, cv::THRESH_BINARY );
+	//cv::threshold(matLab8, tresh2, 82, 255, cv::THRESH_BINARY );
+
+	cv::imshow("tresh", tresh1 );
+
+/*
+	cv::bitwise_xor( tresh1, tresh2, tresh1 );
+
+	cv::Mat strElmnt = getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(11,11));
+	cv::dilate(tresh1, tresh3, strElmnt);
+	cv::bitwise_xor( tresh1, tresh3, tresh1 );
+
+	cv::Mat masked, masked8;
+	matLab2.copyTo(masked, tresh1);
+	masked.convertTo(masked8, CV_8UC1);
+	cv::imshow("labdd", masked );
+*/
+	//tresh1.convertTo(tresh1, CV_8UC1);
 
 	return matLab8;
 
