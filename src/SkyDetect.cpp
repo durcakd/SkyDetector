@@ -82,7 +82,9 @@ int SkyDetect::doSlico( const QString filename, const QString saveLocation )
 	cv::waitKey(0);
 
 	cv::Mat masked;
-	cv::Mat labMat = createSPLabelsMat( labels, width, height);
+	//cv::Mat labMat = createSPLabelsMat( labels, width, height);
+
+	initSPixelsFromLabels( labels, width, height);
 
 	//mSlicoRes.copyTo(masked, labMat);
 	//cv::imshow("labMat", masked );
@@ -197,3 +199,44 @@ cv::Mat SkyDetect::createSPLabelsMat( const int*	labels, const int	width, const 
 
 }
 
+void SkyDetect::initSPixelsFromLabels( const int* labels, const int width, const int height)
+{
+	int idx = 0;
+	int prev = -1;
+	int max = -1;
+	SPixel *spixel;
+
+	// count number of superpixels
+	idx = 0;
+	for( int i = 0; i < height; i++){
+		for( int j = 0; j < width; j++){
+			if( max < labels[idx]){
+				max = labels[idx];
+			}
+			idx++;
+		}
+	}
+
+	// create superpixels object
+	for(int k = 0; k <= max; k++){
+		spixel = new SPixel;
+		spixel->setName( k );
+		mSPV.push_back( spixel );
+	}
+
+
+	// init pixels of superpixels
+	idx = 0;
+	for( int i = 0; i < height; i++){
+		for( int j = 0; j < width; j++){
+
+			mSPV[labels[idx++]]->addPixel(i,j);
+
+		}
+	}
+
+	// check
+	mSPV[0]->getPixelV();
+
+
+}

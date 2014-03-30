@@ -1,6 +1,7 @@
 #ifndef  __SKYDETECT_H__
 #define __SKYDETECT_H__
 
+#include "SPixel.h"
 #include <vector>
 
 #include <opencv2\core\core.hpp>
@@ -11,6 +12,8 @@ class SLIC;
 //typedef unsigned int UINT;
 
 using namespace std;
+
+typedef vector< SPixel* > SPV;
 
 class SkyDetect
 {
@@ -30,6 +33,9 @@ public:
 							int&	width,
 							int&	height) const;
 	cv::Mat createSPLabelsMat( const int* labels, const int width, const int height);
+	void  initSPixelsFromLabels( const int* labels, const int width, const int height);
+
+
 
 
 private:
@@ -42,6 +48,8 @@ private:
 	cv::Mat mImage2;
 	cv::Mat mImageRes;
 	cv::Mat mSlicoRes;
+	SPV mSPV;
+
 };
 
 #endif
