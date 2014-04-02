@@ -14,6 +14,28 @@ SPixel::~SPixel(void)
 	mAdjV.clear();
 }
 
+void SPixel::setName( int name)
+{
+	mName = name;
+}
+
+int SPixel::getName() const
+{
+	return mName;
+}
+
+
+int SPixel::getPixelVSize() const
+{
+	return mPixelV.size();
+}
+
+int SPixel::getAdjVSize() const
+{
+	return mAdjV.size();
+
+}
+
 void SPixel::addPixel(int x, int y)
 {
 	PIX pix;
@@ -32,10 +54,10 @@ void SPixel::addAdj(int adj)
 PIXV SPixel::getPixelV() const
 {
 	PIXV::const_iterator it;
-	qDebug() << "SuperPixel: " << mName << "  pixs:";
+	/*qDebug() << "SuperPixel: " << mName << "  pixs:";
 	for( it = mPixelV.begin(); it != mPixelV.end(); it++){
 		qDebug() << "  " << it->x << " " << it->y;
-	}
+	}*/
 
 	return mPixelV;
 }
@@ -49,8 +71,5 @@ ADJV SPixel::getAdjV() const
 	return mAdjV;
 }
 
-void SPixel::setName( int name)
-{
-	mName = name;
-}
+
 

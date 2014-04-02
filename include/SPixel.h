@@ -24,18 +24,22 @@ public:
 	SPixel( );
 	~SPixel(void);
 
-	void addPixel(int x, int y);
-	void addAdj(int adj);
+	void	addPixel(int x, int y);
+	void	addAdj(int adj);
 
-	PIXV getPixelV() const;
-	ADJV getAdjV() const;
-	void setName( int name);
+	PIXV	getPixelV() const;
+	ADJV	getAdjV() const;
+
+	int		getPixelVSize() const;
+	int		getAdjVSize() const;
+	void	setName( int name);
+	int		getName() const;
 
 
 private:
-	int mName;
-	PIXV mPixelV;
-	ADJV mAdjV;
+	int		mName;
+	PIXV	mPixelV;
+	ADJV	mAdjV;
 };
 
 #endif
