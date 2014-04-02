@@ -32,8 +32,10 @@ public:
 							unsigned int*&	imgBuffer,
 							int&	width,
 							int&	height) const;
-	cv::Mat createSPLabelsMat( const int* labels, const int width, const int height);
-	void  initSPixelsFromLabels( const int* labels, const int width, const int height);
+	cv::Mat createSPLabelsMat( const int* labels, int width, int height);
+	void  initSPixelsFromLabels( const int* labels, int width, int height);
+	void  initSPixelAdj( int width, int height);
+
 
 
 
