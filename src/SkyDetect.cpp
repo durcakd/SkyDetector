@@ -4,7 +4,7 @@
 #include <opencv2\imgproc\imgproc.hpp>
 
 #include <QDebug>
-
+#include <set>
 #include "SLIC.h"
 
 SkyDetect::SkyDetect()
@@ -273,7 +273,7 @@ void  SkyDetect::initSPixelAdj( int width, int height)
 	// create mask
 	//for( i = 0; i < len; i++){ // !!
 	for( i = 0; i < 50; i++){ // !!
-		//qDebug() << " "  << mSPV[i]->getName() << "   -   " << mSPV[i]->getPixelVSize() << "   " << mSPV[i]->getAdjVSize();
+		qDebug() << " "  << mSPV[i]->getName() << "   -   " << mSPV[i]->getPixelVSize() << "   " << mSPV[i]->getAdjVSize();
 		//cv::Mat mask8(cv::Size(width, height), CV_8UC1);
 		cv::Mat mask8   = cv::Mat::zeros(cv::Size(width, height), CV_8UC1);
 		cv::Mat dmask8	= cv::Mat::zeros(cv::Size(width, height), CV_8UC1);
@@ -286,7 +286,7 @@ void  SkyDetect::initSPixelAdj( int width, int height)
 			mask8.at<uchar>(it->x,it->y)= 100;
 		}
 
-		cv::Mat strElmnt = getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(11,11));
+		cv::Mat strElmnt = getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3,3));
 		cv::dilate(mask8, dmask8, strElmnt);
 		cv::bitwise_xor( mask8, dmask8, mask8 );
 
@@ -297,10 +297,29 @@ void  SkyDetect::initSPixelAdj( int width, int height)
 		cv::imshow("masked", masked8 );
 
 
-		cv::imshow("mask8", mask8);
+		//cv::imshow("mask8", mask8);
+
+
+		// get adjency
+		set<int> adjSet;
+		set<int>::const_iterator itAdj;
+		int pix;
+		for( r = 0; r < height; r++){
+			for( c = 0; c < width; c++){
+				pix = masked8.at<uchar>(r,c);
+				if( pix != 0  &&  adjSet.find(pix) == adjSet.end() ){
+					adjSet.insert( pix);
+					mSPV[i]->addAdj(pix);
+
+				}
+			}
+		}
+		for( itAdj = adjSet.begin();
+			 itAdj != adjSet.end(); itAdj++){
+			qDebug() << *itAdj;
+		}
+
 		cv::waitKey(0);
-
-
 	}
 
 
