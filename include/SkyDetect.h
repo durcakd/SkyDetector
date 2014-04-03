@@ -35,6 +35,7 @@ public:
 	cv::Mat createSPLabelsMat( const int* labels, int width, int height);
 	void  initSPixelsFromLabels( const int* labels, int width, int height);
 	void  initSPixelAdj( int width, int height);
+	void  initSPixelAdj16( int width, int height);
 
 
 

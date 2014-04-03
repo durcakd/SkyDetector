@@ -344,9 +344,6 @@ void  SkyDetect::initSPixelAdj( int width, int height)
 
 		cv::waitKey(0);
 	}
-
-
-
 }
 
 void  SkyDetect::initSPixelAdj16( int width, int height)
