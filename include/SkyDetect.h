@@ -4,7 +4,7 @@
 #include "SPixel.h"
 #include <vector>
 
-#include <opencv2\core\core.hpp>
+#include <opencv2/core/core.hpp>
 
 #include <QString>
 
@@ -28,14 +28,11 @@ public:
 	int		doSlico( const QString filename,
 					 const QString saveLocation );
 
-	void	createPicBuffer(const QString filename,
-							unsigned int*&	imgBuffer,
-							int&	width,
-							int&	height) const;
-	cv::Mat createSPLabelsMat( const int* labels, int width, int height);
-	void  initSPixelsFromLabels( const int* labels, int width, int height);
-	void  initSPixelAdj( int width, int height);
-	void  initSPixelAdj16( int width, int height);
+	void	createPicBuffer(const QString filename, unsigned int*&	imgBuffer);
+	void  initSPixelsFromLabels( const int* labels);
+	void  createPattern();
+	void  createPattern( const int* labels);
+	void  initSPixelAdj16();
 
 
 
@@ -46,11 +43,14 @@ private:
 	int		mSpcount;
 	double	mCompactness;
 	SLIC	*mSlico;
+	int		mWidth;
+	int		mHeight;
 
 	cv::Mat mImageIn;
 	cv::Mat mImage2;
 	cv::Mat mImageRes;
 	cv::Mat mSlicoRes;
+	cv::Mat mPattern16;
 	SPV mSPV;
 
 };
