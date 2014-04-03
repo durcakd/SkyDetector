@@ -23,18 +23,15 @@ public:
 	~SkyDetect(void);
 
 	int		detect();
-	cv::Mat getResult();
+	int		doSlico( const QString filename, const QString saveLocation );
 
-	int		doSlico( const QString filename,
-					 const QString saveLocation );
-
-	void	createPicBuffer(const QString filename, unsigned int*&	imgBuffer);
-	void  initSPixelsFromLabels( const int* labels);
-	void  createPattern();
-	void  createPattern( const int* labels);
-	void  initSPixelAdj16();
-
-
+	void	openImage(const QString filename);
+	void	applyFiltersBefore();
+	void	createPicBuffer( unsigned int*&	imgBuffer);
+	void	initSPixelsFromLabels( const int* labels);
+	void	createPattern();
+	void	createPattern( const int* labels);
+	void	initSPixelAdj16();
 
 
 
@@ -42,15 +39,21 @@ private:
 
 	int		mSpcount;
 	double	mCompactness;
+	int*	mLabels;
 	SLIC	*mSlico;
 	int		mWidth;
 	int		mHeight;
+	int		mSize;
 
 	cv::Mat mImageIn;
-	cv::Mat mImage2;
-	cv::Mat mImageRes;
 	cv::Mat mSlicoRes;
 	cv::Mat mPattern16;
+
+
+
+
+	cv::Mat mImage2;
+	//cv::Mat mImageRes;
 	SPV mSPV;
 
 };

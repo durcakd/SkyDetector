@@ -10,131 +10,107 @@
 
 SkyDetect::SkyDetect()
 {
-	mSlico = new SLIC();
-	mSpcount = 300
-
-
-
-
-
-			;
-	mCompactness = 10.0;
-
-
+	mSlico			= new SLIC();
+	mSpcount		= 300;
+	mCompactness	= 10.0;
+	mLabels			= NULL;
 }
 
 SkyDetect::~SkyDetect(void)
 {
-}
-
-cv::Mat SkyDetect::getResult()
-{
-	return mImageRes;
+	if(mLabels){
+		delete [] mLabels;
+	}
 }
 
 int SkyDetect::detect()
 {
-
-	mImageRes = mImageIn;
-
 	QString saveLocation = "C:\\Users\\Durcak\\Desktop\\SLICO\\";
 	QString filename	 = "C:\\Users\\Durcak\\Desktop\\SLICO\\09.jpg";
+
+	openImage( filename );
+	applyFiltersBefore();
+
 	doSlico( filename, saveLocation);
+
+	initSPixelsFromLabels( mLabels);
+	createPattern();
+	initSPixelAdj16();
+
+	cv::waitKey(0);
 
 	return 0;
 }
 
 int SkyDetect::doSlico( const QString filename, const QString saveLocation )
 {
-
 	string stdSaveLoc   = saveLocation.toStdString();
 	string stdFilename  = filename.toStdString();
 
-	unsigned int *imgBuf		= NULL;
-	int	width			= 0;
-	int height			= 0;
-
-	createPicBuffer( filename, imgBuf);
-
-	width			= mWidth;
-	height			= mHeight;
-
-	int size = mWidth * mHeight ;
+	unsigned int *imgBuf = NULL;
+	createPicBuffer( imgBuf);
 
 	if( mSpcount < 200){
 		mSpcount = 200;
 	}
-	if( mSpcount > size) {
+	if( mSpcount > mSize) {
 		qDebug() << "Number of superpixels exceeds number of pixels in the image";
 	}
 
-	int* labels = new int[size];
+	mLabels = new int[mSize];
 	int numlabels = 0;
 
-
-
-	mSlico->PerformSLICO_ForGivenK(
-				imgBuf, mWidth, mHeight, labels, numlabels, mSpcount, mCompactness ); //for a given number K of superpixels
+	mSlico->PerformSLICO_ForGivenK( imgBuf, mWidth, mHeight,
+									mLabels, numlabels,
+									mSpcount, mCompactness ); //for a given number K of superpixels
 	qDebug() << " - PerformSLICO_ForGivenK:	Done";
 
-	mSlico->DrawContoursAroundSegmentsTwoColors(
-				imgBuf, labels, mWidth, mHeight );//for black-and-white contours around superpixels
+	mSlico->DrawContoursAroundSegmentsTwoColors( imgBuf, mLabels,
+												 mWidth, mHeight );//for black-and-white contours around superpixels
 	qDebug() << " - DrawContoursAroundSegmentsTwoColors: Done";
 
-	mSlico->SaveSuperpixelLabels(
-				labels, mWidth, mHeight, stdFilename, stdSaveLoc);
-	qDebug() << " - SaveSuperpixelLabels: Done";
-
-
-
 	mSlicoRes = cv::Mat( mHeight, mWidth, CV_8UC4, imgBuf );
+
 	cv::imshow("SLICO result image", mSlicoRes );
 	cv::waitKey(0);
-
-	//cv::Mat labMat = createSPLabelsMat( labels, width, height);
-
-	initSPixelsFromLabels( labels);
-	//
-	createPattern();
-	initSPixelAdj16();
-
-	cv::waitKey(0);
-
-	if(labels){
-		delete [] labels;
-	}
 
 	return 0;
 }
 
 
-void SkyDetect::createPicBuffer( const QString	filename, unsigned int*& imgBuffer )
+void SkyDetect::openImage( const QString filename)
 {
-	cv::Mat inMat;
-	inMat = cv::imread( filename.toStdString(), CV_LOAD_IMAGE_COLOR);
-
-	mHeight					= inMat.rows;
-	mWidth					= inMat.cols;
-	long imgSize			= mHeight * mWidth;
-
 	qDebug() << "INPUT: " << filename;
-	qDebug() << "type:  " << inMat.type() << "  " << mWidth << "x" << mHeight;
+	mImageIn	= cv::imread( filename.toStdString(), CV_LOAD_IMAGE_COLOR);
+	mHeight		= mImageIn.rows;
+	mWidth		= mImageIn.cols;
+	mSize		= mHeight * mWidth;
 
+	qDebug() << "type:  " << mImageIn.type() << "  " << mWidth << "x" << mHeight;
+
+}
+
+void SkyDetect::applyFiltersBefore()
+{
+	//mImageIn
+}
+
+void SkyDetect::createPicBuffer( unsigned int*& imgBuffer )
+{
 	// create ARGB 4x8bits picture
 	cv::Mat alpha(cv::Size( mWidth, mHeight), CV_8UC1);
 	cv::Mat outMat(cv::Size( mWidth, mHeight),CV_8UC4);
-	cv::Mat in[] = {  alpha, inMat };
+	cv::Mat in[] = {  alpha, mImageIn };
 	int from_to[] = { 0,3,  1,0,  2,1,  3,2 };
 	cv::mixChannels( in, 2, &outMat, 1, from_to, 4 );
 
-	qDebug() << "type2: " << outMat.type();
+	//qDebug() << "type2: " << outMat.type();
 	//cv::imshow( "Input Image2", outMat );
 
 
-	imgBuffer = new UINT[imgSize];
-	memcpy((void*) imgBuffer, outMat.data, imgSize*sizeof(UINT) );
+	imgBuffer = new UINT[mSize];
+	memcpy((void*) imgBuffer, outMat.data, mSize*sizeof(UINT) );
 }
-
 
 void SkyDetect::initSPixelsFromLabels(const int* labels)
 {
@@ -166,7 +142,6 @@ void SkyDetect::initSPixelsFromLabels(const int* labels)
 	idx = 0;
 	for( r = 0; r < mHeight; r++){
 		for( c = 0; c < mWidth; c++){
-
 			mSPV[labels[idx++]]->addPixel(r,c);
 
 		}
@@ -174,18 +149,14 @@ void SkyDetect::initSPixelsFromLabels(const int* labels)
 
 	// check
 	//mSPV[0]->getPixelV();
-
-
 }
 
-
-
-void  SkyDetect::createPattern( const int* labels)
+void SkyDetect::createPattern( const int* labels)
 {
 
 }
 
-void  SkyDetect::createPattern()
+void SkyDetect::createPattern()
 {
 	cv::Mat pattern16(cv::Size( mWidth, mHeight), CV_16UC1);
 	cv::Mat pattern8(cv::Size( mWidth, mHeight), CV_8UC1);
@@ -212,47 +183,44 @@ void  SkyDetect::createPattern()
 	cv::imshow("Pattern8", pattern8);
 }
 
-
-void  SkyDetect::initSPixelAdj16()
+void SkyDetect::initSPixelAdj16()
 {
-	int r, c, i, len, name;
+	int r, c;
 
+	// for all superpixels
+	SPV::const_iterator its;
+	for( its = mSPV.begin(); its != mSPV.end(); its++){
 
+		qDebug() << " "  << (*its)->getName() << "   -   " << (*its)->getPixelVSize() << "   " << (*its)->getAdjVSize();
 
-
-	// create mask
-	//for( i = 0; i < len; i++){ // !!
-	for( i = 0; i < 5; i++){ // !!
-		qDebug() << " "  << mSPV[i]->getName() << "   -   " << mSPV[i]->getPixelVSize() << "   " << mSPV[i]->getAdjVSize();
-		//cv::Mat mask8(cv::Size(width, height), CV_8UC1);
+		// create mask
 		cv::Mat mask8   = cv::Mat::zeros(cv::Size( mWidth, mHeight), CV_8UC1);
 		cv::Mat dmask8	= cv::Mat::zeros(cv::Size( mWidth, mHeight), CV_8UC1);
 
+		PIXV::const_iterator itp;
+		PIXV pixels = (*its)->getPixelV();
 
-		PIXV::const_iterator it;
-		PIXV pixels = mSPV[i]->getPixelV();
-
-		for( it = pixels.begin(); it != pixels.end(); it++){
-			mask8.at<uchar>(it->x,it->y)= 100;
+		for( itp = pixels.begin(); itp != pixels.end(); itp++){
+			mask8.at<uchar>(itp->x,itp->y)= 100;
 		}
 
+
+		// dilate mast
 		cv::Mat strElmnt = getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3,3));
 		cv::dilate(mask8, dmask8, strElmnt);
 		cv::bitwise_xor( mask8, dmask8, mask8 );
 
+		// mask pattern
 		cv::Mat masked8;
 		cv::Mat masked16;
 		mPattern16.copyTo(masked16, mask8);
+
 		masked16.convertTo(masked8, CV_8UC1);
-		//
-		//mSlicoRes.copyTo(masked8, mask8);
 		cv::imshow("masked", masked8 );
 
 
-		//cv::imshow("mask8", mask8);
 
-
-		// get adjency
+		// get adjacency
 		set<int> adjSet;
 		set<int>::const_iterator itAdj;
 		int pix;
@@ -261,15 +229,18 @@ void  SkyDetect::initSPixelAdj16()
 				pix = masked16.at<unsigned short>(r,c);
 				if( pix != 0  &&  adjSet.find(pix) == adjSet.end() ){
 					adjSet.insert( pix);
-					mSPV[i]->addAdj(pix);
+
 
 				}
 			}
 		}
-		for( itAdj = adjSet.begin();
-			 itAdj != adjSet.end(); itAdj++){
+		// will be sorted
+		for( itAdj = adjSet.begin(); itAdj != adjSet.end(); itAdj++){
+			(*its)->addAdj(pix);
 			qDebug() << *itAdj;
+
 		}
+		adjSet.clear();
 
 		cv::waitKey(0);
 	}
