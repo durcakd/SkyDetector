@@ -23,16 +23,18 @@ public:
 	~SkyDetect(void);
 
 	int		detect();
-	int		doSlico( const QString filename, const QString saveLocation );
 
 	void	openImage(const QString filename);
 	void	applyFiltersBefore();
 	void	createPicBuffer( unsigned int*&	imgBuffer);
+	int		doSlico( const QString filename, const QString saveLocation );
+
 	void	initSPixelsFromLabels( const int* labels);
 	void	createPattern();
 	void	createPattern( const int* labels);
 	void	initSPixelAdj16();
 
+	void	mergeSP();
 
 
 private:

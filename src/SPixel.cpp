@@ -24,7 +24,6 @@ int SPixel::getName() const
 	return mName;
 }
 
-
 int SPixel::getPixelVSize() const
 {
 	return mPixelV.size();
@@ -70,6 +69,18 @@ ADJV SPixel::getAdjV() const
 	}
 	return mAdjV;
 }
+
+void SPixel::setMean(const cv::Scalar mean)
+{
+	mMean = mean;
+}
+
+cv::Scalar SPixel::getMean() const
+{
+	return mMean;
+}
+
+
 
 
 

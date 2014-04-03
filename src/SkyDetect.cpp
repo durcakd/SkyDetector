@@ -37,6 +37,8 @@ int SkyDetect::detect()
 	createPattern();
 	initSPixelAdj16();
 
+	mergeSP();
+
 	cv::waitKey(0);
 
 	return 0;
@@ -204,6 +206,14 @@ void SkyDetect::initSPixelAdj16()
 			mask8.at<uchar>(itp->r,itp->c)= 100;
 		}
 
+		// compute mean
+		(*its)->setMean( cv::mean( mSlicoRes, mask8 ));
+		cv::Scalar mean = (*its)->getMean();
+
+		qDebug() << "mean: " << mean.val;
+
+
+
 
 		// dilate mast
 		cv::Mat strElmnt = getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3,3));
@@ -236,7 +246,7 @@ void SkyDetect::initSPixelAdj16()
 		// will be sorted
 		for( itAdj = adjSet.begin(); itAdj != adjSet.end(); itAdj++){
 			(*its)->addAdj(pix);
-			qDebug() << *itAdj;
+			//qDebug() << *itAdj;
 
 		}
 		adjSet.clear();
@@ -245,4 +255,8 @@ void SkyDetect::initSPixelAdj16()
 	}
 }
 
+void SkyDetect::mergeSP()
+{
 
+
+}

@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <algorithm>
+#include <opencv2/core/core.hpp>
 
 using namespace std;
 
@@ -24,22 +25,26 @@ public:
 	SPixel( );
 	~SPixel(void);
 
-	void	addPixel(int r, int c);
-	void	addAdj(int adj);
+	void		addPixel(int r, int c);
+	void		addAdj(int adj);
 
-	PIXV	getPixelV() const;
-	ADJV	getAdjV() const;
+	PIXV		getPixelV() const;
+	ADJV		getAdjV() const;
 
-	int		getPixelVSize() const;
-	int		getAdjVSize() const;
-	void	setName( int name);
-	int		getName() const;
+	int			getPixelVSize() const;
+	int			getAdjVSize() const;
+	void		setName( int name);
+	int			getName() const;
+	void		setMean(const cv::Scalar mean);
+	cv::Scalar	getMean() const;
 
 
 private:
-	int		mName;
-	PIXV	mPixelV;
-	ADJV	mAdjV;
+	int			mName;
+	PIXV		mPixelV;
+	ADJV		mAdjV;
+	cv::Scalar	mMean;
+
 };
 
 #endif
