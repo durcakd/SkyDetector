@@ -36,11 +36,11 @@ int SPixel::getAdjVSize() const
 
 }
 
-void SPixel::addPixel(int x, int y)
+void SPixel::addPixel(int r, int c)
 {
 	PIX pix;
-	pix.x = x;
-	pix.y = y;
+	pix.r = r;
+	pix.c = c;
 
 	//mPixelV.push_back( make_pair(x,y));
 	mPixelV.push_back( pix );

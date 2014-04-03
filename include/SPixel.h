@@ -8,8 +8,8 @@ using namespace std;
 
 
 typedef struct pix{
-	int x;
-	int y;
+	int r;
+	int c;
 } PIX;
 
 //typedef vector< pair<int, int> > PIXV;
@@ -24,7 +24,7 @@ public:
 	SPixel( );
 	~SPixel(void);
 
-	void	addPixel(int x, int y);
+	void	addPixel(int r, int c);
 	void	addAdj(int adj);
 
 	PIXV	getPixelV() const;

@@ -174,7 +174,7 @@ void SkyDetect::createPattern()
 		// any name cant be 0, so we identify superpixels accoding theirs names
 		PIXV::const_iterator ipt;
 		for( ipt = pixels.begin(); ipt != pixels.end(); ipt++){
-			pattern16.at<unsigned short>(ipt->x, ipt->y) = name;
+			pattern16.at<unsigned short>(ipt->r, ipt->c) = name;
 		}
 	}
 
@@ -201,7 +201,7 @@ void SkyDetect::initSPixelAdj16()
 		PIXV pixels = (*its)->getPixelV();
 
 		for( itp = pixels.begin(); itp != pixels.end(); itp++){
-			mask8.at<uchar>(itp->x,itp->y)= 100;
+			mask8.at<uchar>(itp->r,itp->c)= 100;
 		}
 
 
@@ -226,11 +226,10 @@ void SkyDetect::initSPixelAdj16()
 		int pix;
 		for( r = 0; r < mHeight; r++){
 			for( c = 0; c < mWidth; c++){
+
 				pix = masked16.at<unsigned short>(r,c);
 				if( pix != 0  &&  adjSet.find(pix) == adjSet.end() ){
 					adjSet.insert( pix);
-
-
 				}
 			}
 		}
