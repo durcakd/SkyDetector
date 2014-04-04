@@ -26,7 +26,7 @@ SkyDetect::~SkyDetect(void)
 int SkyDetect::detect()
 {
 	QString saveLocation = "C:\\Users\\Durcak\\Desktop\\SLICO\\";
-	QString filename	 = "C:\\Users\\Durcak\\Desktop\\SLICO\\09.jpg";
+	QString filename	 = "C:\\Users\\Durcak\\Desktop\\SLICO\\01.jpg";
 
 	openImage( filename );
 	applyFiltersBefore();
@@ -74,7 +74,7 @@ int SkyDetect::doSlico( const QString filename, const QString saveLocation )
 	mSlicoRes = cv::Mat( mHeight, mWidth, CV_8UC4, imgBuf );
 
 	cv::imshow("SLICO result image", mSlicoRes );
-	cv::waitKey(0);
+	cv::waitKey(1);
 
 	return 0;
 }
@@ -95,6 +95,7 @@ void SkyDetect::openImage( const QString filename)
 void SkyDetect::applyFiltersBefore()
 {
 	//mImageIn
+	//cv::medianBlur(mImageIn, mImageIn, 3);
 }
 
 void SkyDetect::createPicBuffer( unsigned int*& imgBuffer )
@@ -181,19 +182,23 @@ void SkyDetect::createPattern()
 	}
 
 	mPattern16 = pattern16;
-	pattern16.convertTo( pattern8, CV_8UC1);
-	cv::imshow("Pattern8", pattern8);
+	//pattern16.convertTo( pattern8, CV_8UC1);
+	//cv::imshow("Pattern8", pattern8);
+	//cv::waitKey(1);
 }
 
 void SkyDetect::initSPixelAdj16()
 {
 	int r, c;
 
+	cv::Mat strElmnt = getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3,3));
+
+
 	// for all superpixels
 	SPV::const_iterator its;
 	for( its = mSPV.begin(); its != mSPV.end(); its++){
 
-		qDebug() << " "  << (*its)->getName() << "   -   " << (*its)->getPixelVSize() << "   " << (*its)->getAdjVSize();
+		//qDebug() << " "  << (*its)->getName() << "   -   " << (*its)->getPixelVSize() << "   " << (*its)->getAdjVSize();
 
 		// create mask
 		cv::Mat mask8   = cv::Mat::zeros(cv::Size( mWidth, mHeight), CV_8UC1);
@@ -208,15 +213,16 @@ void SkyDetect::initSPixelAdj16()
 
 		// compute mean
 		(*its)->setMean( cv::mean( mSlicoRes, mask8 ));
+
+
 		cv::Scalar mean = (*its)->getMean();
-
-		qDebug() << "mean: " << mean.val;
-
+		qDebug() << "mean: " << mean.val[0] << " " << mean.val[1] << " " << mean.val[2];
+		//cv::Mat test  = cv::Mat( mWidth, mHeight, CV_8UC3, mean );
+		//cv::imshow("mean", test );
 
 
 
 		// dilate mast
-		cv::Mat strElmnt = getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3,3));
 		cv::dilate(mask8, dmask8, strElmnt);
 		cv::bitwise_xor( mask8, dmask8, mask8 );
 
@@ -225,8 +231,8 @@ void SkyDetect::initSPixelAdj16()
 		cv::Mat masked16;
 		mPattern16.copyTo(masked16, mask8);
 
-		masked16.convertTo(masked8, CV_8UC1);
-		cv::imshow("masked", masked8 );
+		//masked16.convertTo(masked8, CV_8UC1);
+		//cv::imshow("masked", masked8 );
 
 
 
@@ -251,12 +257,50 @@ void SkyDetect::initSPixelAdj16()
 		}
 		adjSet.clear();
 
-		cv::waitKey(0);
+
+		//cv::waitKey(0);
 	}
+
+	//cv::cvtColor( mSlicoRes, mSlicoRes, CV_HSV2RGB );
 }
 
 void SkyDetect::mergeSP()
 {
 
+	cv::Mat meanMat(cv::Size( mWidth, mHeight), CV_8UC3);
+	cv::Mat meanMatHsv(cv::Size( mWidth, mHeight), CV_8UC3);
+	cv::Mat meanMask = cv::Mat::zeros(cv::Size( mWidth, mHeight), CV_8UC1);
+	cv::Mat meanMatRes(cv::Size( mWidth, mHeight), CV_8UC3);
+	int r, c;
+
+	SPV::const_iterator its;
+	for( its = mSPV.begin(); its != mSPV.end(); its++){
+		cv::Scalar mean = (*its)->getMean();
+		//qDebug() << "mean: " << mean.val[0] << " " << mean.val[1] << " " << mean.val[2];
+		//cv::Mat test  = cv::Mat( mWidth, mHeight, CV_8UC3, mean );
+		//cv::imshow("mean", test );
+
+		PIXV pixels = (*its)->getPixelV();
+
+		// any name cant be 0, so we identify superpixels accoding theirs names
+		PIXV::const_iterator ipt;
+		for( ipt = pixels.begin(); ipt != pixels.end(); ipt++){
+			//meanMat.at<unsigned short>(ipt->r, ipt->c) = name;
+			r = ipt->r;
+			c = ipt->c;
+			meanMat.data[meanMat.step[0]*r + meanMat.step[1]* c + 0] = mean.val[0];
+			meanMat.data[meanMat.step[0]*r + meanMat.step[1]* c + 1] = mean.val[1];
+			meanMat.data[meanMat.step[0]*r + meanMat.step[1]* c + 2] = mean.val[2];
+
+		}
+	}
+
+	cv::imshow("meanMat", meanMat);
+
+	cv::cvtColor( meanMat, meanMatHsv, CV_BGR2HSV );
+	cv::inRange( meanMatHsv, cv::Scalar(90, 0, 110), cv::Scalar(130, 255, 255), meanMask);
+	meanMat.copyTo(meanMatRes, meanMask);
+
+	cv::imshow("meanMasked", meanMatRes);
 
 }
