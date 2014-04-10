@@ -11,8 +11,8 @@
 SkyDetect::SkyDetect()
 {
 	mSlico			= new SLIC();
-	mSpcount		= 300;
-	mCompactness	= 10.0;
+	mSpcount		= 500;
+	mCompactness	= 1.0;
 	mLabels			= NULL;
 }
 
@@ -26,7 +26,7 @@ SkyDetect::~SkyDetect(void)
 int SkyDetect::detect()
 {
 	QString saveLocation = "C:\\Users\\Durcak\\Desktop\\SLICO\\";
-	QString filename	 = "C:\\Users\\Durcak\\Desktop\\SLICO\\01.jpg";
+	QString filename	 = "C:\\Users\\Durcak\\Desktop\\SLICO\\12.jpg";
 
 	openImage( filename );
 	applyFiltersBefore();
