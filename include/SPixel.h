@@ -38,11 +38,12 @@ public:
 	void		setMean(const cv::Scalar mean);
 	cv::Scalar	getMean() const;
 	void		computeBoundary();
+	int			mLeft, mRight, mTop, mBottom;
 
 
 private:
 	int			mName;
-	int			mLeft, mRight, mTop, mBottom;
+	//int			mLeft, mRight, mTop, mBottom;
 
 	PIXV		mPixelV;
 	ADJV		mAdjV;

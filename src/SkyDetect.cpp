@@ -245,8 +245,18 @@ void SkyDetect::initSPixelAdj16()
 		set<int> adjSet;
 		set<int>::const_iterator itAdj;
 		int pix;
-		for( r = 0; r < mHeight; r++){
-			for( c = 0; c < mWidth; c++){
+
+		int left	= (*its)->mLeft	  - 1;
+		int right	= (*its)->mRight  + 2;
+		int top		= (*its)->mTop    - 1;
+		int bottom	= (*its)->mBottom + 2;
+		if( left	< 0)		left = 0;
+		if( right	>= mWidth)	right = mWidth;
+		if( top		< 0)		top = 0;
+		if( bottom	>= mHeight) bottom = mHeight;
+
+		for( r = top; r < bottom; r++){
+			for( c = left; c < right; c++){
 
 				pix = masked16.at<unsigned short>(r,c);
 				if( pix != 0  &&  adjSet.find(pix) == adjSet.end() ){
