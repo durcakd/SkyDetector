@@ -35,7 +35,8 @@ public:
 	void	initSPixelAdj16();
 
 	void	mergeSP();
-	void	classificateSP();
+	void	classificate();
+	int		classificateSp(int idxSP);
 
 
 private:

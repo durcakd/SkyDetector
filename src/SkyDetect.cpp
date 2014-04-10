@@ -40,7 +40,7 @@ int SkyDetect::detect()
 	initSPixelAdj16();
 
 	//mergeSP();
-	classificateSP();
+	classificate();
 
 	cv::waitKey(0);
 
@@ -325,7 +325,7 @@ void SkyDetect::mergeSP()
 
 }
 
-void SkyDetect::classificateSP()
+void SkyDetect::classificate()
 {
 	std::priority_queue<int, vector<int>, compare> pqueue;
 
@@ -349,18 +349,16 @@ void SkyDetect::classificateSP()
 		int idxSP = pqueue.top();
 		pqueue.pop();
 
-		//qDebug() << "from eueue: " << idxSP;
+
 
 		// classi
 		// mSPV[idxSP]->isSky();
 		bool isSky = mSPV[idxSP]->mClass;
 
 		if( isSky == UNKNOWN ){
-			mSPV[idxSP]->mClass = SKY;
+			//qDebug() << "from eueue: " << idxSP;
 
-			bool isSky = mSPV[idxSP]->mClass;
-
-
+			isSky = classificateSp( idxSP );
 
 			if( isSky == SKY ){
 				// get adjencies
@@ -378,4 +376,25 @@ void SkyDetect::classificateSP()
 			}
 		}
 	}
+}
+
+int	SkyDetect::classificateSp(int idxSP){
+
+	cv::Scalar mean = mSPV[idxSP]->getMean();
+
+	cv::Mat meanMat( 1, 1, CV_8UC3, mean );
+	cv::Mat mask( 1, 1, CV_8UC1 );
+
+	cv::cvtColor( meanMat, meanMat, CV_BGR2HSV );
+	cv::inRange( meanMat, cv::Scalar(90, 0, 110), cv::Scalar(130, 255, 255), mask);
+
+	if( mask.at<uchar>(0,0) == 0 ){
+		//qDebug() << "NO_SKY";
+		mSPV[idxSP]->mClass = NO_SKY;
+		return NO_SKY;
+	}
+
+	//qDebug() << "SKY";
+	mSPV[idxSP]->mClass = SKY;
+	return SKY;
 }
