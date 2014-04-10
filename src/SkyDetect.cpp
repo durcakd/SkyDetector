@@ -150,6 +150,11 @@ void SkyDetect::initSPixelsFromLabels(const int* labels)
 		}
 	}
 
+	SPV::const_iterator ist;
+	for( ist = mSPV.begin(); ist != mSPV.end(); ist++){
+		(*ist)->computeBoundary();
+	}
+
 	// check
 	//mSPV[0]->getPixelV();
 }

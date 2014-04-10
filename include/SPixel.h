@@ -37,10 +37,13 @@ public:
 	int			getName() const;
 	void		setMean(const cv::Scalar mean);
 	cv::Scalar	getMean() const;
+	void		computeBoundary();
 
 
 private:
 	int			mName;
+	int			mLeft, mRight, mTop, mBottom;
+
 	PIXV		mPixelV;
 	ADJV		mAdjV;
 	cv::Scalar	mMean;

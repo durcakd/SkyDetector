@@ -45,6 +45,24 @@ void SPixel::addPixel(int r, int c)
 	mPixelV.push_back( pix );
 }
 
+void SPixel::computeBoundary()
+{
+	PIXV::const_iterator it;
+	it = mPixelV.begin();
+
+	mLeft	= it->c;
+	mRight	= it->c;
+	mTop	= it->r;
+	mBottom = it->r;
+
+	for( it = mPixelV.begin(); it != mPixelV.end(); it++){
+		if( mLeft	> it->c)  mLeft		= it->c;
+		if( mRight	< it->c)  mRight	= it->c;
+		if( mTop	> it->r)  mTop		= it->r;
+		if( mBottom < it->r)  mBottom	= it->r;
+	}
+}
+
 void SPixel::addAdj(int adj)
 {
 	mAdjV.push_back(adj);
