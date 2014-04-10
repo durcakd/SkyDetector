@@ -4,8 +4,7 @@
 
 SPixel::SPixel()
 {
-
-
+	mClass = UNKNOWN;
 }
 
 SPixel::~SPixel(void)
@@ -81,10 +80,10 @@ PIXV SPixel::getPixelV() const
 ADJV SPixel::getAdjV() const
 {
 	ADJV::const_iterator it;
-	qDebug() << "SuperPixel: " << mName << "  adjs:";
-	for( it = mAdjV.begin(); it != mAdjV.end(); it++){
-		qDebug() << "    " << *it;
-	}
+	//qDebug() << "SuperPixel: " << mName << "  adjs:";
+	//for( it = mAdjV.begin(); it != mAdjV.end(); it++){
+	//	qDebug() << "    " << *it;
+	//}
 	return mAdjV;
 }
 

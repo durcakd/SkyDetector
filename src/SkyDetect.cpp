@@ -5,6 +5,8 @@
 
 #include <QDebug>
 #include <set>
+#include <queue>
+
 #include "SLIC.h"
 
 
@@ -37,7 +39,8 @@ int SkyDetect::detect()
 	createPattern();
 	initSPixelAdj16();
 
-	mergeSP();
+	//mergeSP();
+	classificateSP();
 
 	cv::waitKey(0);
 
@@ -261,14 +264,15 @@ void SkyDetect::initSPixelAdj16()
 				pix = masked16.at<unsigned short>(r,c);
 				if( pix != 0  &&  adjSet.find(pix) == adjSet.end() ){
 					adjSet.insert( pix);
+
 				}
 			}
 		}
 		// will be sorted
 		for( itAdj = adjSet.begin(); itAdj != adjSet.end(); itAdj++){
-			(*its)->addAdj(pix);
-			//qDebug() << *itAdj;
 
+			// real index in mSPV   !!!!!
+			(*its)->addAdj( *itAdj - 1);
 		}
 		adjSet.clear();
 
@@ -303,9 +307,10 @@ void SkyDetect::mergeSP()
 			//meanMat.at<unsigned short>(ipt->r, ipt->c) = name;
 			r = ipt->r;
 			c = ipt->c;
-			meanMat.data[meanMat.step[0]*r + meanMat.step[1]* c + 0] = mean.val[0];
-			meanMat.data[meanMat.step[0]*r + meanMat.step[1]* c + 1] = mean.val[1];
-			meanMat.data[meanMat.step[0]*r + meanMat.step[1]* c + 2] = mean.val[2];
+			int ndx = meanMat.step[0]*r + meanMat.step[1]*c;
+			meanMat.data[ndx + 0] = mean.val[0];
+			meanMat.data[ndx + 1] = mean.val[1];
+			meanMat.data[ndx + 2] = mean.val[2];
 
 		}
 	}
@@ -318,4 +323,59 @@ void SkyDetect::mergeSP()
 
 	cv::imshow("meanMasked", meanMatRes);
 
+}
+
+void SkyDetect::classificateSP()
+{
+	std::priority_queue<int, vector<int>, compare> pqueue;
+
+	// get indexes of superpixels that are on the top of image
+	int is;
+	for( is = 0; is < mSPV.size(); is++){
+		// is on the top of image
+		if( mSPV[is]->mTop == 0 ){
+			pqueue.  push( is );
+			qDebug() << "is0     " << is;
+		}
+	}
+
+	// while pqueue is not empty, classifite superpixel in it
+	while( !pqueue.empty() ){
+		// get index of superpixel,   clasifite it,
+		// if sky, add its neighbours into queue
+
+
+
+		int idxSP = pqueue.top();
+		pqueue.pop();
+
+		//qDebug() << "from eueue: " << idxSP;
+
+		// classi
+		// mSPV[idxSP]->isSky();
+		bool isSky = mSPV[idxSP]->mClass;
+
+		if( isSky == UNKNOWN ){
+			mSPV[idxSP]->mClass = SKY;
+
+			bool isSky = mSPV[idxSP]->mClass;
+
+
+
+			if( isSky == SKY ){
+				// get adjencies
+				ADJV::const_iterator ita;
+				ADJV adjencies = mSPV[idxSP]->getAdjV();
+				for( ita = adjencies.begin(); ita != adjencies.end(); ita++){
+
+					isSky = mSPV[*ita]->mClass;
+					if( isSky == UNKNOWN ){
+						//qDebug() << "from eueue: " << *ita;
+						pqueue.push(*ita);
+					}
+				}
+
+			}
+		}
+	}
 }

@@ -7,6 +7,11 @@
 
 using namespace std;
 
+struct compare  {
+	bool operator()(const int& l, const int& r) {
+		return l > r;
+	}
+};
 
 typedef struct pix{
 	int r;
@@ -17,6 +22,8 @@ typedef struct pix{
 typedef vector< PIX > PIXV;
 typedef vector< int > ADJV;
 
+
+const enum { UNKNOWN, SKY, NO_SKY };
 
 class SPixel
 {
@@ -38,8 +45,9 @@ public:
 	void		setMean(const cv::Scalar mean);
 	cv::Scalar	getMean() const;
 	void		computeBoundary();
-	int			mLeft, mRight, mTop, mBottom;
 
+	int			mLeft, mRight, mTop, mBottom;  // need getter
+	int			mClass;							// need getter, setter
 
 private:
 	int			mName;
@@ -48,6 +56,8 @@ private:
 	PIXV		mPixelV;
 	ADJV		mAdjV;
 	cv::Scalar	mMean;
+
+
 
 };
 
