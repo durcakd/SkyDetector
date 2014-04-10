@@ -13,8 +13,8 @@
 SkyDetect::SkyDetect()
 {
 	mSlico			= new SLIC();
-	mSpcount		= 500;
-	mCompactness	= 1.0;
+	mSpcount		= 1000;
+	mCompactness	= 10.0;
 	mLabels			= NULL;
 }
 
@@ -28,7 +28,7 @@ SkyDetect::~SkyDetect(void)
 int SkyDetect::detect()
 {
 	QString saveLocation = "C:\\Users\\Durcak\\Desktop\\SLICO\\";
-	QString filename	 = "C:\\Users\\Durcak\\Desktop\\SLICO\\12.jpg";
+	QString filename	 = "C:\\Users\\Durcak\\Desktop\\SLICO\\14.jpg";
 
 	openImage( filename );
 	applyFiltersBefore();
@@ -41,6 +41,7 @@ int SkyDetect::detect()
 
 	//mergeSP();
 	classificate();
+	createClassImage();
 
 	cv::waitKey(0);
 
@@ -335,7 +336,7 @@ void SkyDetect::classificate()
 		// is on the top of image
 		if( mSPV[is]->mTop == 0 ){
 			pqueue.  push( is );
-			qDebug() << "is0     " << is;
+			//qDebug() << "is0     " << is;
 		}
 	}
 
@@ -353,7 +354,7 @@ void SkyDetect::classificate()
 
 		// classi
 		// mSPV[idxSP]->isSky();
-		bool isSky = mSPV[idxSP]->mClass;
+		int isSky = mSPV[idxSP]->mClass;
 
 		if( isSky == UNKNOWN ){
 			//qDebug() << "from eueue: " << idxSP;
@@ -368,17 +369,16 @@ void SkyDetect::classificate()
 
 					isSky = mSPV[*ita]->mClass;
 					if( isSky == UNKNOWN ){
-						//qDebug() << "from eueue: " << *ita;
 						pqueue.push(*ita);
 					}
 				}
-
 			}
 		}
 	}
 }
 
-int	SkyDetect::classificateSp(int idxSP){
+int	SkyDetect::classificateSp(int idxSP)
+{
 
 	cv::Scalar mean = mSPV[idxSP]->getMean();
 
@@ -398,3 +398,31 @@ int	SkyDetect::classificateSp(int idxSP){
 	mSPV[idxSP]->mClass = SKY;
 	return SKY;
 }
+
+void SkyDetect::createClassImage()
+{
+	cv::Mat resMean = cv::Mat::zeros(cv::Size( mWidth, mHeight), CV_8UC3);
+	cv::Mat res = cv::Mat::zeros(cv::Size( mWidth, mHeight), CV_8UC3);
+
+	SPV::const_iterator its;
+	for( its = mSPV.begin(); its != mSPV.end(); its++){
+		if( (*its)->mClass == SKY ){
+
+			cv::Scalar mean = (*its)->getMean();
+			PIXV pixels = (*its)->getPixelV();
+
+			// any name cant be 0, so we identify superpixels accoding theirs names
+			PIXV::const_iterator ipt;
+			for( ipt = pixels.begin(); ipt != pixels.end(); ipt++){
+
+				int ndx = resMean.step[0]* ipt->r + resMean.step[1]* ipt->c;
+				resMean.data[ndx + 0] = mean.val[0];
+				resMean.data[ndx + 1] = mean.val[1];
+				resMean.data[ndx + 2] = mean.val[2];
+			}
+		}
+	}
+
+	cv::imshow( "resultMean Class ", resMean  );
+}
+

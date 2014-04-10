@@ -37,6 +37,7 @@ public:
 	void	mergeSP();
 	void	classificate();
 	int		classificateSp(int idxSP);
+	void	createClassImage();
 
 
 private:
