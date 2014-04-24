@@ -242,7 +242,7 @@ void SkyDetect::initSPixelAdj16()
 
 
 
-/*
+		/*
 		cv::Mat meanMat( 1, 1, CV_8UC3, mean );
 		qDebug() << meanMat.at<uchar>(0,0);
 		cv::cvtColor( meanMat, meanMat, CV_BGR2HSV );
@@ -420,10 +420,73 @@ int	SkyDetect::classificateSp(int idxSP)
 	return NO_SKY;
 }
 
+
+
+// ===========================================================
+
+void SkyDetect::createSKYandMAYBELists()
+{
+	bool isSky;
+	int is;
+	std::list< int >::const_iterator its;
+
+	for( its = listMAYBE.cbegin(); its != listMAYBE.cend(); its++ ){
+		// get adjencies
+		ADJV::const_iterator ita;
+		ADJV adjencies = mSPV[*its]->getAdjV();
+
+		for( ita = adjencies.begin(); ita != adjencies.end(); ita++){
+
+			isSky = mSPV[*ita]->mClass;
+			if( isSky == SKY ){
+				mSPV[*its]->addToListSKY(*ita);
+
+			} else if( isSky == MAYBE ){
+				mSPV[*its]->addToListMAYBE(*ita);
+			}
+		}
+
+	}
+}
+
+
+void SkyDetect::classificate2()
+{
+
+	// create list of all MAYBE
+	int is;
+	for( is = 0; is < mSPV.size(); is++){
+		if( mSPV[is]->mClass == MAYBE){
+			listMAYBE.push_back( is );
+			//qDebug() << "is0     " << is;
+		}
+	}
+
+	// create SKY list & MAYBE list for all MAYBE in listMAYBE
+	createSKYandMAYBELists();
+
+	/*
+	// while exist least one MAYBE with least one SKY
+	while( 1 ){
+
+		int idxSP = maybeQ.pop_back();
+
+		if( mSPV [idxSP]->mClass == MAYBE){
+			// try all SKY neighbourt
+			}
+	}
+
+}
+
+bool SkyDetect::neighbourt(int idxSP)
+{
+	return false;
+}
+
 void SkyDetect::createClassImage()
 {
 	cv::Mat resMean = cv::Mat::zeros(cv::Size( mWidth, mHeight), CV_8UC3);
-	//cv::Mat res = cv::Mat::zeros(cv::Size( mWidth, mHeight), CV_8UC3);
+	cv::Mat resMeanMaybe = cv::Mat::zeros(cv::Size( mWidth, mHeight), CV_8UC3);
 
 	SPV::const_iterator its;
 	for( its = mSPV.begin(); its != mSPV.end(); its++){
@@ -437,13 +500,21 @@ void SkyDetect::createClassImage()
 			for( ipt = pixels.begin(); ipt != pixels.end(); ipt++){
 
 				int ndx = resMean.step[0]* ipt->r + resMean.step[1]* ipt->c;
-				resMean.data[ndx + 0] = mean.val[0];
-				resMean.data[ndx + 1] = mean.val[1];
-				resMean.data[ndx + 2] = mean.val[2];
+				if( (*its)->mClass != MAYBE ){
+					resMean.data[ndx + 0] = mean.val[0];
+					resMean.data[ndx + 1] = mean.val[1];
+					resMean.data[ndx + 2] = mean.val[2];
+				}
+				resMeanMaybe.data[ndx + 0] = mean.val[0];
+				resMeanMaybe.data[ndx + 1] = mean.val[1];
+				resMeanMaybe.data[ndx + 2] = mean.val[2];
+
+
 			}
 		}
 	}
 
 	cv::imshow( "resultMean Class ", resMean  );
+	cv::imshow( "resultMean Class with MAYBE ", resMeanMaybe  );
 }
 
