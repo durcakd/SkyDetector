@@ -97,6 +97,26 @@ cv::Scalar SPixel::getMean() const
 	return mMean;
 }
 
+void SPixel::addToListSKY(int adj)
+{
+	mListSKY.push_back(adj);
+}
+
+void SPixel::addToListMAYBE(int adj)
+{
+	mListMAYBE.push_back(adj);
+}
+
+int	SPixel::getOneSkyNeighbourt()
+{
+	if( mListSKY.empty()){
+		return -1;
+	}
+
+	int back = mListSKY.back();
+	mListSKY.pop_back();
+	return back;
+}
 
 
 

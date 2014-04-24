@@ -46,6 +46,12 @@ public:
 	cv::Scalar	getMean() const;
 	void		computeBoundary();
 
+	void		addToListSKY(int adj);
+	void		addToListMAYBE(int adj);
+	int			getOneSkyNeighbourt();
+
+
+
 	int			mLeft, mRight, mTop, mBottom;  // need getter
 	int			mClass;							// need getter, setter
 
@@ -57,6 +63,8 @@ private:
 	ADJV		mAdjV;
 	cv::Scalar	mMean;
 
+	ADJV		mListSKY;
+	ADJV		mListMAYBE;
 
 
 };
