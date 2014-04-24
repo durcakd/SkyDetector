@@ -23,7 +23,7 @@ typedef vector< PIX > PIXV;
 typedef vector< int > ADJV;
 
 
-const enum { UNKNOWN, SKY, NO_SKY };
+const enum { UNKNOWN, SKY, NO_SKY, MAYBE };
 
 class SPixel
 {

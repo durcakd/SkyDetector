@@ -28,7 +28,7 @@ SkyDetect::~SkyDetect(void)
 int SkyDetect::detect()
 {
 	QString saveLocation = "C:\\Users\\Durcak\\Desktop\\SLICO\\";
-	QString filename	 = "C:\\Users\\Durcak\\Desktop\\SLICO\\14.jpg";
+	QString filename	 = "C:\\Users\\Durcak\\Desktop\\SLICO\\05.jpg";
 
 	openImage( filename );
 	applyFiltersBefore();
@@ -240,10 +240,22 @@ void SkyDetect::initSPixelAdj16()
 		cv::Mat masked16;
 		mPattern16.copyTo(masked16, mask8);
 
-		//masked16.convertTo(masked8, CV_8UC1);
-		//cv::imshow("masked", masked8 );
 
 
+/*
+		cv::Mat meanMat( 1, 1, CV_8UC3, mean );
+		qDebug() << meanMat.at<uchar>(0,0);
+		cv::cvtColor( meanMat, meanMat, CV_BGR2HSV );
+		qDebug() << meanMat.at<uchar>(0,0)  << "         " << "";
+
+
+		mSlicoRes.copyTo(masked16, dmask8);
+		masked16.convertTo(masked8, CV_8UC1);
+		cv::imshow("masked", masked8 );
+		cv::waitKey(0);
+
+		mPattern16.copyTo(masked16, mask8);
+*/
 
 		// get adjacency
 		set<int> adjSet;
@@ -361,7 +373,7 @@ void SkyDetect::classificate()
 
 			isSky = classificateSp( idxSP );
 
-			if( isSky == SKY ){
+			if( isSky == SKY || isSky == MAYBE){
 				// get adjencies
 				ADJV::const_iterator ita;
 				ADJV adjencies = mSPV[idxSP]->getAdjV();
@@ -386,27 +398,36 @@ int	SkyDetect::classificateSp(int idxSP)
 	cv::Mat mask( 1, 1, CV_8UC1 );
 
 	cv::cvtColor( meanMat, meanMat, CV_BGR2HSV );
-	cv::inRange( meanMat, cv::Scalar(90, 0, 110), cv::Scalar(130, 255, 255), mask);
 
-	if( mask.at<uchar>(0,0) == 0 ){
-		//qDebug() << "NO_SKY";
-		mSPV[idxSP]->mClass = NO_SKY;
-		return NO_SKY;
+	// SKY
+	cv::inRange( meanMat, cv::Scalar(95, 0, 110), cv::Scalar(125, 255, 255), mask);
+	if( ! mask.at<uchar>(0,0) == 0 ){
+		//qDebug() << "SKY";
+		mSPV[idxSP]->mClass = SKY;
+		return SKY;
 	}
 
-	//qDebug() << "SKY";
-	mSPV[idxSP]->mClass = SKY;
-	return SKY;
+	// MAYBE
+	cv::inRange( meanMat, cv::Scalar(85, 0, 100), cv::Scalar(165, 255, 255), mask);
+	if( ! mask.at<uchar>(0,0) == 0 ){
+		//qDebug() << "MAYBE";
+		mSPV[idxSP]->mClass = MAYBE;
+		return MAYBE;
+	}
+
+	//qDebug() << "NO_SKY";
+	mSPV[idxSP]->mClass = NO_SKY;
+	return NO_SKY;
 }
 
 void SkyDetect::createClassImage()
 {
 	cv::Mat resMean = cv::Mat::zeros(cv::Size( mWidth, mHeight), CV_8UC3);
-	cv::Mat res = cv::Mat::zeros(cv::Size( mWidth, mHeight), CV_8UC3);
+	//cv::Mat res = cv::Mat::zeros(cv::Size( mWidth, mHeight), CV_8UC3);
 
 	SPV::const_iterator its;
 	for( its = mSPV.begin(); its != mSPV.end(); its++){
-		if( (*its)->mClass == SKY ){
+		if( (*its)->mClass == SKY  ||  (*its)->mClass == MAYBE ){
 
 			cv::Scalar mean = (*its)->getMean();
 			PIXV pixels = (*its)->getPixelV();
