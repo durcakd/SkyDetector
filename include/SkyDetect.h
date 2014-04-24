@@ -41,8 +41,8 @@ public:
 	void	createClassImage();
 
 	void	classificate2();
-	bool	neighbourt(int idxSP);
 	void	createSKYandMAYBELists();
+	bool	similar(int is1, int is2);
 
 private:
 
@@ -60,6 +60,7 @@ private:
 
 
 	std::list< int > listMAYBE;
+	int		mSKYCounter;
 
 	cv::Mat mImage2;
 	//cv::Mat mImageRes;

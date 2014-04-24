@@ -16,6 +16,8 @@ SkyDetect::SkyDetect()
 	mSpcount		= 1000;
 	mCompactness	= 10.0;
 	mLabels			= NULL;
+
+	mSKYCounter = 0;
 }
 
 SkyDetect::~SkyDetect(void)
@@ -440,6 +442,7 @@ void SkyDetect::createSKYandMAYBELists()
 			isSky = mSPV[*ita]->mClass;
 			if( isSky == SKY ){
 				mSPV[*its]->addToListSKY(*ita);
+				mSKYCounter++;
 
 			} else if( isSky == MAYBE ){
 				mSPV[*its]->addToListMAYBE(*ita);
@@ -454,7 +457,9 @@ void SkyDetect::classificate2()
 {
 
 	// create list of all MAYBE
-	int is;
+	int is, adj;
+	bool isSimilar = false;
+
 	for( is = 0; is < mSPV.size(); is++){
 		if( mSPV[is]->mClass == MAYBE){
 			listMAYBE.push_back( is );
@@ -465,20 +470,42 @@ void SkyDetect::classificate2()
 	// create SKY list & MAYBE list for all MAYBE in listMAYBE
 	createSKYandMAYBELists();
 
-	/*
+
 	// while exist least one MAYBE with least one SKY
-	while( 1 ){
+	while( mSKYCounter > 0 ){
 
-		int idxSP = maybeQ.pop_back();
+		int is = listMAYBE.front();
+		listMAYBE.pop_front();
 
-		if( mSPV [idxSP]->mClass == MAYBE){
+		if( mSPV[is]->mClass == MAYBE){
 			// try all SKY neighbourt
+			adj = mSPV[is]->getOneSkyNeighbourt();
+
+			if(adj != -1 )  // exist SKY neighbourt
+				isSimilar = similar( is, adj );
+
+				if( isSimilar ){
+					// classifite it as SKY
+					mSPV[is]->mClass = SKY;
+					// add his to his adj as SKY
+
+					// ----------------?????????
+
+				} else if( mSPV[is]->hasAdjMAYBE() ){
+					// therte is a chance, so add it back to listMAYBE,
+					listMAYBE.push_back( is );
+
+				} else {
+					// classificate it as NO_SKY2
+					mSPV[is]->mClass = NO_SKY2;
+				}
+
 			}
 	}
 
 }
 
-bool SkyDetect::neighbourt(int idxSP)
+bool SkyDetect::similar(int is1, int is2)
 {
 	return false;
 }
