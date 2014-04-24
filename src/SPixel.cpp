@@ -118,6 +118,11 @@ int	SPixel::getOneSkyNeighbourt()
 	return back;
 }
 
+bool SPixel::hasAdjMAYBE()
+{
+	return ! mListMAYBE.empty();
+}
+
 
 
 

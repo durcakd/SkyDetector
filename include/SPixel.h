@@ -23,7 +23,7 @@ typedef vector< PIX > PIXV;
 typedef vector< int > ADJV;
 
 
-const enum { UNKNOWN, SKY, NO_SKY, MAYBE };
+const enum { UNKNOWN, SKY, NO_SKY, MAYBE, NO_SKY2 };
 
 class SPixel
 {
@@ -49,6 +49,7 @@ public:
 	void		addToListSKY(int adj);
 	void		addToListMAYBE(int adj);
 	int			getOneSkyNeighbourt();
+	bool		hasAdjMAYBE();
 
 
 
