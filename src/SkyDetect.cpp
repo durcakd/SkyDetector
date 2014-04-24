@@ -482,6 +482,8 @@ void SkyDetect::classificate2()
 			adj = mSPV[is]->getOneSkyNeighbourt();
 
 			if(adj != -1 )  // exist SKY neighbourt
+				mSKYCounter--;
+
 				isSimilar = similar( is, adj );
 
 				if( isSimilar ){
@@ -490,6 +492,7 @@ void SkyDetect::classificate2()
 					// add his to his adj as SKY
 
 					// ----------------?????????
+					// !!!   mSKYCounter++;
 
 				} else if( mSPV[is]->hasAdjMAYBE() ){
 					// therte is a chance, so add it back to listMAYBE,
