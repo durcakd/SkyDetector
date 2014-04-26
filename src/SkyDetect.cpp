@@ -31,7 +31,7 @@ SkyDetect::~SkyDetect(void)
 int SkyDetect::detect()
 {
 	QString saveLocation = "C:\\Users\\Durcak\\Desktop\\SLICO\\";
-	QString filename	 = "C:\\Users\\Durcak\\Desktop\\SLICO\\hrad2.jpg";
+	QString filename	 = "C:\\Users\\Durcak\\Desktop\\SLICO\\05.jpg";
 
 	openImage( filename );
 	applyFiltersBefore();
@@ -564,7 +564,10 @@ bool SkyDetect::similar(int is1, int is2)
 	if( b1 > b2)	db = b1-b2;
 	else			db = b2-b1;
 
-	return (dr < 10)  &&  (dg < 5)  &&  (db < 15);
+	bool isSim = (dr < 8.5)  &&  (dg < 5)  &&  (db < 15);
+	if (!isSim) {isSim = (dr < 100)  &&  (dg < 5)  &&  (db < 50); }
+
+	return isSim;
 
 
 	//return dr + dg + db < 13;
