@@ -136,6 +136,11 @@ ADJV SPixel::getAdjvMAYBE() const
 	return mListMAYBE;
 }
 
+int	SPixel::getListSKYSize() const
+{
+	return mListSKY.size();
+}
+
 void SPixel::createMeanHSV()
 {
 	//float h, s, v;

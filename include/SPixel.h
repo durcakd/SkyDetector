@@ -52,6 +52,7 @@ public:
 	void		addToListSKY(int adj);
 	void		addToListMAYBE(int adj);
 	int			getOneSkyNeighbourt();
+	int			getListSKYSize() const;
 	bool		hasAdjMAYBE();
 	ADJV		getAdjvMAYBE() const;
 	void		createMeanHSV();

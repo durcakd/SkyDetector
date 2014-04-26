@@ -461,7 +461,7 @@ void SkyDetect::createSKYandMAYBELists()
 
 void SkyDetect::classificate2()
 {
-
+int sum = 0;
 	// create list of all MAYBE
 	int is, adj;
 	bool isSimilar = false;
@@ -486,17 +486,11 @@ void SkyDetect::classificate2()
 		int is = listMAYBE.front();
 		listMAYBE.pop_front();
 
-		while( mSPV[is]->mClass == MAYBE
-			   && -1 != (adj = mSPV[is]->getOneSkyNeighbourt()) ){
+		while( -1 < (adj = mSPV[is]->getOneSkyNeighbourt()) ){
 
 			// exist SKY neighbourt
 			mSKYCounter--;
-
-			if(mSPV[adj]->mClass != SKY){
-				qDebug() << "error *******************";
-			}
-
-
+			qDebug() << is << "   >><   " << adj;
 			isSimilar = similar( is, adj );
 
 			if( isSimilar ){
@@ -510,29 +504,78 @@ void SkyDetect::classificate2()
 					if(mSPV[*ita]->mClass == MAYBE){
 						mSPV[*ita]->addToListSKY( is );
 						mSKYCounter++;
+						qDebug() << "  > " << *ita;
+						bool find = false;
+						std::list< int >::const_iterator its; for( its = listMAYBE.cbegin(); its != listMAYBE.cend(); its++ ){
+							if(*its == *ita) {find = true;
+							//qDebug() << " +++++";
+							}
+							//qDebug() << "   " << *its;
+						} if( !find ){ qDebug() << "NOT FOUND ";}
+
+
 					}
 				}
 
+				std::list< int >::const_iterator its;
+				//sum = 0;   for( its = listMAYBE.cbegin(); its != listMAYBE.cend(); its++ ){ sum += mSPV[*its]->getListSKYSize();
+				//qDebug() << " *  ; " << *its << "  ;:= ; "  << mSPV[*its]->getListSKYSize();
+				//} if( sum != mSKYCounter){ qDebug() << "EROR-=========1    " << mSKYCounter << "   " << sum ;}
+
+
 				while( -1 != mSPV[is]->getOneSkyNeighbourt() ){
+					qDebug() << "<--";
 					mSKYCounter--;
 				}
+
+				sum = 0; for( its = listMAYBE.cbegin(); its != listMAYBE.cend(); its++ ){ sum += mSPV[*its]->getListSKYSize();} if( sum != mSKYCounter){ qDebug() << "EROR-==========2   " << mSKYCounter << "   " << sum ;}
+
 			}
 		}
 
-
-		if( ! isSimilar ){
+		QString state;
+		if( mSPV[is]->mClass == MAYBE) state = "MAYBE";
+		if( mSPV[is]->mClass == SKY) state = "SKY";
+		if( mSPV[is]->mClass == NO_SKY2) state = "NO_SKY2";
+		qDebug() << "(" << is << ")  " <<  state <<   "   ---------------------------------------------";
+		if( mSPV[is]->mClass == MAYBE ){
 			if( mSPV[is]->hasAdjMAYBE() ){
 				// therte is a chance, so add it back to listMAYBE,
 				listMAYBE.push_back( is );
+				qDebug() << "(" << is << ")  " <<  mSKYCounter <<   "   ------------------------------------------++-";
+
 			} else {
 				// classificate it as NO_SKY2
 				mSPV[is]->mClass = NO_SKY2;
+				qDebug() << ">>>> NO_SKY2 " <<   is;
+				if(mSPV[is]->getListSKYSize() > 0 )
+					qDebug() << "EROR-*********************************";
 			}
 		}
-
 		//createClassImage2();
-		qDebug() << "----";
-		//cv::waitKey(1);
+		qDebug() << "(" << is << ")  " <<  mSKYCounter <<   "   ---------------------------------------------";
+		//cv::waitKey(0);
+
+
+		sum = 0;
+		std::list< int >::const_iterator its;
+		for( its = listMAYBE.cbegin(); its != listMAYBE.cend(); its++ ){
+			// get adjencies
+
+			if(mSPV[*its]->mClass == SKY){
+				qDebug() << "EROR-*****************class";
+			}
+			if(mSPV[*its]->mClass == NO_SKY2){
+				qDebug() << "EROR-*****************class";
+			}
+
+			sum += mSPV[*its]->getListSKYSize();
+		}
+		if( sum != mSKYCounter){
+			qDebug() << "EROR-======================== " << sum ;
+		}
+
+
 
 	}
 }
@@ -542,8 +585,8 @@ bool SkyDetect::similar(int is1, int is2)
 
 	cv::Scalar mean1 = mSPV[is1]->getMeanHSV();
 	cv::Scalar mean2 = mSPV[is2]->getMeanHSV();
-	qDebug() << "1meanHSV: " << mean1.val[0] << " " << mean1.val[1] << " " << mean1.val[2];
-	qDebug() << "2meanHSV: " << mean2.val[0] << " " << mean2.val[1] << " " << mean2.val[2];
+	//qDebug() << "1meanHSV: " << mean1.val[0] << " " << mean1.val[1] << " " << mean1.val[2];
+	//qDebug() << "2meanHSV: " << mean2.val[0] << " " << mean2.val[1] << " " << mean2.val[2];
 
 	double r1 = mean1.val[0];
 	double g1 = mean1.val[1];
