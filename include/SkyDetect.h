@@ -38,7 +38,8 @@ public:
 	void	mergeSP();
 	void	classificate();
 	int		classificateSp(int idxSP);
-	void	createClassImage();
+	void	createClassImage1();
+	void	createClassImage2();
 
 	void	classificate2();
 	void	createSKYandMAYBELists();

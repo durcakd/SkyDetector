@@ -17,7 +17,7 @@ SkyDetect::SkyDetect()
 	mCompactness	= 10.0;
 	mLabels			= NULL;
 
-	maxd		= 10.0;
+	maxd		= 30.0;
 	mSKYCounter = 0;
 }
 
@@ -31,7 +31,7 @@ SkyDetect::~SkyDetect(void)
 int SkyDetect::detect()
 {
 	QString saveLocation = "C:\\Users\\Durcak\\Desktop\\SLICO\\";
-	QString filename	 = "C:\\Users\\Durcak\\Desktop\\SLICO\\11.jpg";
+	QString filename	 = "C:\\Users\\Durcak\\Desktop\\SLICO\\hrad1.jpg";
 
 	openImage( filename );
 	applyFiltersBefore();
@@ -44,8 +44,9 @@ int SkyDetect::detect()
 
 	//mergeSP();
 	classificate();
+	createClassImage1();
 	classificate2();
-	createClassImage();
+	createClassImage2();
 
 	cv::waitKey(0);
 
@@ -335,7 +336,7 @@ void SkyDetect::mergeSP()
 	cv::imshow("meanMat", meanMat);
 
 	cv::cvtColor( meanMat, meanMatHsv, CV_BGR2HSV );
-	cv::inRange( meanMatHsv, cv::Scalar(90, 0, 110), cv::Scalar(130, 255, 255), meanMask);
+	cv::inRange( meanMatHsv, cv::Scalar(100, 90, 140), cv::Scalar(125, 255, 255), meanMask);
 	meanMat.copyTo(meanMatRes, meanMask);
 
 	cv::imshow("meanMasked", meanMatRes);
@@ -404,11 +405,12 @@ int	SkyDetect::classificateSp(int idxSP)
 	cv::cvtColor( meanMat, meanMat, CV_BGR2HSV );
 
 	// SKY
-	cv::inRange( meanMat, cv::Scalar(95, 30, 130), cv::Scalar(125, 255, 255), mask);
+	cv::inRange( meanMat, cv::Scalar(100, 80, 130), cv::Scalar(120, 255, 255), mask);
 	if( ! mask.at<uchar>(0,0) == 0 ){
 		//qDebug() << "SKY";
 		mSPV[idxSP]->mClass = SKY;
 		return SKY;
+
 	}
 
 	// MAYBE
@@ -542,10 +544,12 @@ bool SkyDetect::similar(int is1, int is2)
 	if( b1 > b2)	db = b1-b2;
 	else			db = b2-b1;
 
-	return (dr < maxd)  &&  (dg < maxd)  &&  (db < maxd);
+	return (dr < 2)  &&  (dg < maxd)  &&  (db < maxd);
+
+	//return dr + dg + db < 13;
 }
 
-void SkyDetect::createClassImage()
+void SkyDetect::createClassImage1()
 {
 	cv::Mat resMean = cv::Mat::zeros(cv::Size( mWidth, mHeight), CV_8UC3);
 	cv::Mat resMeanMaybe = cv::Mat::zeros(cv::Size( mWidth, mHeight), CV_8UC3);
@@ -567,16 +571,61 @@ void SkyDetect::createClassImage()
 					resMean.data[ndx + 1] = mean.val[1];
 					resMean.data[ndx + 2] = mean.val[2];
 				}
-				resMeanMaybe.data[ndx + 0] = mean.val[0];
-				resMeanMaybe.data[ndx + 1] = mean.val[1];
-				resMeanMaybe.data[ndx + 2] = mean.val[2];
+				if( (*its)->mClass == MAYBE ){
+					resMeanMaybe.data[ndx + 0] = mean.val[0];
+					resMeanMaybe.data[ndx + 1] = mean.val[1];
+					resMeanMaybe.data[ndx + 2] = mean.val[2];
+				}
 
+			}
+		}
+	}
+	cv::imshow( "resultMean Class 1  " , resMean  );
+	cv::imshow( "resultMean Class 1 with MAYBE ", resMeanMaybe  );
+
+}
+
+void SkyDetect::createClassImage2()
+{
+	cv::Mat resMean = cv::Mat::zeros(cv::Size( mWidth, mHeight), CV_8UC3);
+	cv::Mat resMeanMaybe = cv::Mat::zeros(cv::Size( mWidth, mHeight), CV_8UC3);
+	cv::Mat resMeanNo2 = cv::Mat::zeros(cv::Size( mWidth, mHeight), CV_8UC3);
+
+	SPV::const_iterator its;
+	for( its = mSPV.begin(); its != mSPV.end(); its++){
+		if( (*its)->mClass == SKY  ||  (*its)->mClass == MAYBE  || (*its)->mClass == NO_SKY2){
+
+			cv::Scalar mean = (*its)->getMean();
+			PIXV pixels = (*its)->getPixelV();
+
+			// any name cant be 0, so we identify superpixels accoding theirs names
+			PIXV::const_iterator ipt;
+			for( ipt = pixels.begin(); ipt != pixels.end(); ipt++){
+
+				int ndx = resMean.step[0]* ipt->r + resMean.step[1]* ipt->c;
+				if( (*its)->mClass == SKY ){
+					resMean.data[ndx + 0] = mean.val[0];
+					resMean.data[ndx + 1] = mean.val[1];
+					resMean.data[ndx + 2] = mean.val[2];
+				}
+				if( (*its)->mClass == MAYBE ){
+					resMeanMaybe.data[ndx + 0] = mean.val[0];
+					resMeanMaybe.data[ndx + 1] = mean.val[1];
+					resMeanMaybe.data[ndx + 2] = mean.val[2];
+				}
+				if( (*its)->mClass == NO_SKY2 ){
+					resMeanNo2.data[ndx + 0] = mean.val[0];
+					resMeanNo2.data[ndx + 1] = mean.val[1];
+					resMeanNo2.data[ndx + 2] = mean.val[2];
+				}
 
 			}
 		}
 	}
 
-	cv::imshow( "resultMean Class ", resMean  );
-	cv::imshow( "resultMean Class with MAYBE ", resMeanMaybe  );
-}
 
+	cv::imshow( "resultMean Class 2  " , resMean  );
+	//cv::imshow( "resultMean Class 2 with MAYBE ", resMeanMaybe  );
+	//cv::imshow( "resultMean Class 2 with NO_SKY2 ", resMeanNo2  );
+
+}
