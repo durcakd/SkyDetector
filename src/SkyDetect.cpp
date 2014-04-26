@@ -13,7 +13,7 @@
 SkyDetect::SkyDetect()
 {
 	mSlico			= new SLIC();
-	mSpcount		= 600;
+	mSpcount		= 1000;
 	mCompactness	= 10.0;
 	mLabels			= NULL;
 
@@ -31,7 +31,7 @@ SkyDetect::~SkyDetect(void)
 int SkyDetect::detect()
 {
 	QString saveLocation = "C:\\Users\\Durcak\\Desktop\\SLICO\\";
-	QString filename	 = "C:\\Users\\Durcak\\Desktop\\SLICO\\hrad1.jpg";
+	QString filename	 = "C:\\Users\\Durcak\\Desktop\\SLICO\\hrad2.jpg";
 
 	openImage( filename );
 	applyFiltersBefore();
@@ -421,6 +421,14 @@ int	SkyDetect::classificateSp(int idxSP)
 		return MAYBE;
 	}
 
+	// white
+	cv::inRange( meanMat, cv::Scalar(0, 0, 150), cv::Scalar(255, 255, 255), mask);
+	if( ! mask.at<uchar>(0,0) == 0 ){
+		//qDebug() << "MAYBE";
+		mSPV[idxSP]->mClass = MAYBE;
+		return MAYBE;
+	}
+
 	//qDebug() << "NO_SKY";
 	mSPV[idxSP]->mClass = NO_SKY;
 	return NO_SKY;
@@ -556,7 +564,7 @@ bool SkyDetect::similar(int is1, int is2)
 	if( b1 > b2)	db = b1-b2;
 	else			db = b2-b1;
 
-	return (dr < 1.5)  &&  (dg < 5)  &&  (db < 10);
+	return (dr < 10)  &&  (dg < 5)  &&  (db < 15);
 
 
 	//return dr + dg + db < 13;
