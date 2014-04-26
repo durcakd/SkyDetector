@@ -31,7 +31,7 @@ SkyDetect::~SkyDetect(void)
 int SkyDetect::detect()
 {
 	QString saveLocation = "C:\\Users\\Durcak\\Desktop\\SLICO\\";
-	QString filename	 = "C:\\Users\\Durcak\\Desktop\\SLICO\\hrad4.jpg";
+	QString filename	 = "C:\\Users\\Durcak\\Desktop\\SLICO\\11.jpg";
 
 	openImage( filename );
 	applyFiltersBefore();
@@ -44,6 +44,7 @@ int SkyDetect::detect()
 
 	//mergeSP();
 	classificate();
+	classificate2();
 	createClassImage();
 
 	cv::waitKey(0);
@@ -403,7 +404,7 @@ int	SkyDetect::classificateSp(int idxSP)
 	cv::cvtColor( meanMat, meanMat, CV_BGR2HSV );
 
 	// SKY
-	cv::inRange( meanMat, cv::Scalar(100, 50, 150), cv::Scalar(120, 200, 255), mask);
+	cv::inRange( meanMat, cv::Scalar(95, 30, 130), cv::Scalar(125, 255, 255), mask);
 	if( ! mask.at<uchar>(0,0) == 0 ){
 		//qDebug() << "SKY";
 		mSPV[idxSP]->mClass = SKY;
@@ -478,35 +479,44 @@ void SkyDetect::classificate2()
 		int is = listMAYBE.front();
 		listMAYBE.pop_front();
 
-		if( mSPV[is]->mClass == MAYBE){
-			// try all SKY neighbourt
-			adj = mSPV[is]->getOneSkyNeighbourt();
+		while( mSPV[is]->mClass == MAYBE
+			   && -1 != (adj = mSPV[is]->getOneSkyNeighbourt()) ){
 
-			if(adj != -1 )  // exist SKY neighbourt
-				mSKYCounter--;
+			// exist SKY neighbourt
+			mSKYCounter--;
 
 			isSimilar = similar( is, adj );
 
 			if( isSimilar ){
 				// classifite it as SKY
 				mSPV[is]->mClass = SKY;
+
 				// add his to his adj as SKY
+				ADJV::const_iterator ita;
+				ADJV adjMAYBE = mSPV[is]->getAdjvMAYBE();
+				for( ita = adjMAYBE.begin(); ita != adjMAYBE.end(); ita++){
+					mSPV[*ita]->addToListSKY( is );
+					mSKYCounter++;
+				}
 
-				// ----------------?????????
-				// !!!   mSKYCounter++;
+				while( -1 != mSPV[is]->getOneSkyNeighbourt() ){
+					mSKYCounter--;
+				}
+			}
+		}
 
-			} else if( mSPV[is]->hasAdjMAYBE() ){
+
+		if( ! isSimilar ){
+			if( mSPV[is]->hasAdjMAYBE() ){
 				// therte is a chance, so add it back to listMAYBE,
 				listMAYBE.push_back( is );
-
 			} else {
 				// classificate it as NO_SKY2
 				mSPV[is]->mClass = NO_SKY2;
 			}
-
 		}
-	}
 
+	}
 }
 
 bool SkyDetect::similar(int is1, int is2)

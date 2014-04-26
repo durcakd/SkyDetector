@@ -50,6 +50,7 @@ public:
 	void		addToListMAYBE(int adj);
 	int			getOneSkyNeighbourt();
 	bool		hasAdjMAYBE();
+	ADJV		getAdjvMAYBE() const;
 
 
 

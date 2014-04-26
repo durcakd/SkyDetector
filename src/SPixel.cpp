@@ -79,7 +79,7 @@ PIXV SPixel::getPixelV() const
 }
 ADJV SPixel::getAdjV() const
 {
-	ADJV::const_iterator it;
+	//ADJV::const_iterator it;
 	//qDebug() << "SuperPixel: " << mName << "  adjs:";
 	//for( it = mAdjV.begin(); it != mAdjV.end(); it++){
 	//	qDebug() << "    " << *it;
@@ -123,6 +123,10 @@ bool SPixel::hasAdjMAYBE()
 	return ! mListMAYBE.empty();
 }
 
+ADJV SPixel::getAdjvMAYBE() const
+{
+	return mListMAYBE;
+}
 
 
 
