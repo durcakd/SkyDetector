@@ -1,0 +1,6 @@
+/.project
+_build
+-build
+_install
+CMakeLists.txt.user
+-build
