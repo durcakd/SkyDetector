@@ -23,7 +23,7 @@ typedef vector< PIX > PIXV;
 typedef vector< int > ADJV;
 
 
-const enum { UNKNOWN, SKY, NO_SKY };
+const enum { UNKNOWN, SKY, NO_SKY, MAYBE, NO_SKY2 };
 
 class SPixel
 {
@@ -43,8 +43,21 @@ public:
 	void		setName( int name);
 	int			getName() const;
 	void		setMean(const cv::Scalar mean);
+
 	cv::Scalar	getMean() const;
+	cv::Scalar	getMeanHSV() const;
+
 	void		computeBoundary();
+
+	void		addToListSKY(int adj);
+	void		addToListMAYBE(int adj);
+	int			getOneSkyNeighbourt();
+	int			getListSKYSize() const;
+	bool		hasAdjMAYBE();
+	ADJV		getAdjvMAYBE() const;
+	void		createMeanHSV();
+
+
 
 	int			mLeft, mRight, mTop, mBottom;  // need getter
 	int			mClass;							// need getter, setter
@@ -56,7 +69,10 @@ private:
 	PIXV		mPixelV;
 	ADJV		mAdjV;
 	cv::Scalar	mMean;
+	cv::Scalar	mMeanHSV;
 
+	ADJV		mListSKY;
+	ADJV		mListMAYBE;
 
 
 };

@@ -1,5 +1,8 @@
 #include "SPixel.h"
 
+#include <opencv2/imgproc/imgproc.hpp>
+
+
 #include <QDebug>
 
 SPixel::SPixel()
@@ -79,7 +82,7 @@ PIXV SPixel::getPixelV() const
 }
 ADJV SPixel::getAdjV() const
 {
-	ADJV::const_iterator it;
+	//ADJV::const_iterator it;
 	//qDebug() << "SuperPixel: " << mName << "  adjs:";
 	//for( it = mAdjV.begin(); it != mAdjV.end(); it++){
 	//	qDebug() << "    " << *it;
@@ -97,7 +100,60 @@ cv::Scalar SPixel::getMean() const
 	return mMean;
 }
 
+cv::Scalar SPixel::getMeanHSV() const
+{
+	return mMeanHSV;
+}
 
+void SPixel::addToListSKY(int adj)
+{
+	mListSKY.push_back(adj);
+}
 
+void SPixel::addToListMAYBE(int adj)
+{
+	mListMAYBE.push_back(adj);
+}
+
+int	SPixel::getOneSkyNeighbourt()
+{
+	if( mListSKY.empty()){
+		return -1;
+	}
+
+	int back = mListSKY.back();
+	mListSKY.pop_back();
+	return back;
+}
+
+bool SPixel::hasAdjMAYBE()
+{
+	return ! mListMAYBE.empty();
+}
+
+ADJV SPixel::getAdjvMAYBE() const
+{
+	return mListMAYBE;
+}
+
+int	SPixel::getListSKYSize() const
+{
+	return mListSKY.size();
+}
+
+void SPixel::createMeanHSV()
+{
+
+	cv::Mat meanMat( 1, 1, CV_8UC3, mMean );
+	cv::cvtColor( meanMat, meanMat, CV_BGR2HSV );
+
+	mMeanHSV.val[0] = meanMat.data[0];
+	mMeanHSV.val[1] = meanMat.data[1];
+	mMeanHSV.val[2] = meanMat.data[2];
+
+	//qDebug() << "1mean:    " << mMean.val[0] << " " << mMean.val[1] << " " << mMean.val[2];
+	//qDebug() << "2meanHSV: " << mMeanHSV.val[0] << " " << mMeanHSV.val[1] << " " << mMeanHSV.val[2];
+
+}
 
 

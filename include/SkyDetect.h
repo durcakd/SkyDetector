@@ -3,6 +3,7 @@
 
 #include "SPixel.h"
 #include <vector>
+#include <list>
 
 #include <opencv2/core/core.hpp>
 
@@ -35,8 +36,14 @@ public:
 	void	initSPixelAdj16();
 
 	void	mergeSP();
-	void	classificateSP();
+	void	classificate();
+	int		classificateSp(int idxSP);
+	void	createClassImage1();
+	void	createClassImage2();
 
+	void	classificate2();
+	void	createSKYandMAYBELists();
+	bool	similar(int is1, int is2);
 
 private:
 
@@ -53,11 +60,14 @@ private:
 	cv::Mat mPattern16;
 
 
-
+	std::list< int > listMAYBE;
+	int		mSKYCounter;
 
 	cv::Mat mImage2;
 	//cv::Mat mImageRes;
 	SPV mSPV;
+
+	double maxd;
 
 };
 

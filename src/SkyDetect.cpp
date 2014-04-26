@@ -13,9 +13,12 @@
 SkyDetect::SkyDetect()
 {
 	mSlico			= new SLIC();
-	mSpcount		= 500;
-	mCompactness	= 1.0;
+	mSpcount		= 1000;
+	mCompactness	= 10.0;
 	mLabels			= NULL;
+
+	maxd		= 30.0;
+	mSKYCounter = 0;
 }
 
 SkyDetect::~SkyDetect(void)
@@ -28,7 +31,7 @@ SkyDetect::~SkyDetect(void)
 int SkyDetect::detect()
 {
 	QString saveLocation = "C:\\Users\\Durcak\\Desktop\\SLICO\\";
-	QString filename	 = "C:\\Users\\Durcak\\Desktop\\SLICO\\12.jpg";
+	QString filename	 = "C:\\Users\\Durcak\\Desktop\\SLICO\\05.jpg";
 
 	openImage( filename );
 	applyFiltersBefore();
@@ -40,7 +43,10 @@ int SkyDetect::detect()
 	initSPixelAdj16();
 
 	//mergeSP();
-	classificateSP();
+	classificate();
+	createClassImage1();
+	classificate2();
+	createClassImage2();
 
 	cv::waitKey(0);
 
@@ -239,10 +245,22 @@ void SkyDetect::initSPixelAdj16()
 		cv::Mat masked16;
 		mPattern16.copyTo(masked16, mask8);
 
-		//masked16.convertTo(masked8, CV_8UC1);
-		//cv::imshow("masked", masked8 );
 
 
+		/*
+		cv::Mat meanMat( 1, 1, CV_8UC3, mean );
+		qDebug() << meanMat.at<uchar>(0,0);
+		cv::cvtColor( meanMat, meanMat, CV_BGR2HSV );
+		qDebug() << meanMat.at<uchar>(0,0)  << "         " << "";
+
+
+		mSlicoRes.copyTo(masked16, dmask8);
+		masked16.convertTo(masked8, CV_8UC1);
+		cv::imshow("masked", masked8 );
+		cv::waitKey(0);
+
+		mPattern16.copyTo(masked16, mask8);
+*/
 
 		// get adjacency
 		set<int> adjSet;
@@ -318,14 +336,14 @@ void SkyDetect::mergeSP()
 	cv::imshow("meanMat", meanMat);
 
 	cv::cvtColor( meanMat, meanMatHsv, CV_BGR2HSV );
-	cv::inRange( meanMatHsv, cv::Scalar(90, 0, 110), cv::Scalar(130, 255, 255), meanMask);
+	cv::inRange( meanMatHsv, cv::Scalar(100, 90, 140), cv::Scalar(125, 255, 255), meanMask);
 	meanMat.copyTo(meanMatRes, meanMask);
 
 	cv::imshow("meanMasked", meanMatRes);
 
 }
 
-void SkyDetect::classificateSP()
+void SkyDetect::classificate()
 {
 	std::priority_queue<int, vector<int>, compare> pqueue;
 
@@ -335,7 +353,7 @@ void SkyDetect::classificateSP()
 		// is on the top of image
 		if( mSPV[is]->mTop == 0 ){
 			pqueue.  push( is );
-			qDebug() << "is0     " << is;
+			//qDebug() << "is0     " << is;
 		}
 	}
 
@@ -349,20 +367,18 @@ void SkyDetect::classificateSP()
 		int idxSP = pqueue.top();
 		pqueue.pop();
 
-		//qDebug() << "from eueue: " << idxSP;
+
 
 		// classi
 		// mSPV[idxSP]->isSky();
-		bool isSky = mSPV[idxSP]->mClass;
+		int isSky = mSPV[idxSP]->mClass;
 
 		if( isSky == UNKNOWN ){
-			mSPV[idxSP]->mClass = SKY;
+			//qDebug() << "from eueue: " << idxSP;
 
-			bool isSky = mSPV[idxSP]->mClass;
+			isSky = classificateSp( idxSP );
 
-
-
-			if( isSky == SKY ){
+			if( isSky == SKY || isSky == MAYBE){
 				// get adjencies
 				ADJV::const_iterator ita;
 				ADJV adjencies = mSPV[idxSP]->getAdjV();
@@ -370,12 +386,270 @@ void SkyDetect::classificateSP()
 
 					isSky = mSPV[*ita]->mClass;
 					if( isSky == UNKNOWN ){
-						//qDebug() << "from eueue: " << *ita;
 						pqueue.push(*ita);
 					}
+				}
+			}
+		}
+	}
+}
+
+int	SkyDetect::classificateSp(int idxSP)
+{
+
+	cv::Scalar mean = mSPV[idxSP]->getMean();
+
+	cv::Mat meanMat( 1, 1, CV_8UC3, mean );
+	cv::Mat mask( 1, 1, CV_8UC1 );
+
+	cv::cvtColor( meanMat, meanMat, CV_BGR2HSV );
+
+	// SKY
+	cv::inRange( meanMat, cv::Scalar(100, 80, 130), cv::Scalar(120, 255, 255), mask);
+	if( ! mask.at<uchar>(0,0) == 0 ){
+		//qDebug() << "SKY";
+		mSPV[idxSP]->mClass = SKY;
+		return SKY;
+
+	}
+
+	// MAYBE
+	cv::inRange( meanMat, cv::Scalar(85, 0, 100), cv::Scalar(165, 255, 255), mask);
+	if( ! mask.at<uchar>(0,0) == 0 ){
+		//qDebug() << "MAYBE";
+		mSPV[idxSP]->mClass = MAYBE;
+		return MAYBE;
+	}
+
+	// white
+	cv::inRange( meanMat, cv::Scalar(0, 0, 150), cv::Scalar(255, 255, 255), mask);
+	if( ! mask.at<uchar>(0,0) == 0 ){
+		//qDebug() << "MAYBE";
+		mSPV[idxSP]->mClass = MAYBE;
+		return MAYBE;
+	}
+
+	//qDebug() << "NO_SKY";
+	mSPV[idxSP]->mClass = NO_SKY;
+	return NO_SKY;
+}
+
+
+
+// ===========================================================
+
+void SkyDetect::createSKYandMAYBELists()
+{
+	int isSky;
+	int is;
+	std::list< int >::const_iterator its;
+
+	for( its = listMAYBE.cbegin(); its != listMAYBE.cend(); its++ ){
+		// get adjencies
+		ADJV::const_iterator ita;
+		ADJV adjencies = mSPV[*its]->getAdjV();
+
+		for( ita = adjencies.cbegin(); ita != adjencies.cend(); ita++){
+			//qDebug() << "--";
+			isSky = mSPV[*ita]->mClass;
+			if( isSky == SKY ){
+				mSPV[*its]->addToListSKY(*ita);
+				mSKYCounter++;
+
+			} else if( isSky == MAYBE ){
+				mSPV[*its]->addToListMAYBE(*ita);
+			}
+
+		}
+
+	}
+
+}
+
+
+void SkyDetect::classificate2()
+{
+	int sum = 0;
+	// create list of all MAYBE
+	int is, adj;
+	bool isSimilar = false;
+
+	for( is = 0; is < mSPV.size(); is++){
+		if( mSPV[is]->mClass == MAYBE){
+			listMAYBE.push_back( is );
+			//qDebug() << "is0     " << is;
+			mSPV[is]->createMeanHSV();
+		} else if(mSPV[is]->mClass == SKY) {
+			mSPV[is]->createMeanHSV();
+		}
+	}
+
+	// create SKY list & MAYBE list for all MAYBE in listMAYBE
+	createSKYandMAYBELists();
+
+
+	// while exist least one MAYBE with least one SKY
+	while( mSKYCounter > 0 ){
+
+		int is = listMAYBE.front();
+		listMAYBE.pop_front();
+
+		while( -1 < (adj = mSPV[is]->getOneSkyNeighbourt()) ){
+
+			// exist SKY neighbourt
+			mSKYCounter--;
+			isSimilar = similar( is, adj );
+
+			if( isSimilar ){
+				// classifite it as SKY
+				mSPV[is]->mClass = SKY;
+
+				// add his to his adj as SKY
+				ADJV::const_iterator ita;
+				ADJV adjMAYBE = mSPV[is]->getAdjvMAYBE();
+				for( ita = adjMAYBE.begin(); ita != adjMAYBE.end(); ita++){
+					if(mSPV[*ita]->mClass == MAYBE){
+						mSPV[*ita]->addToListSKY( is );
+						mSKYCounter++;
+					}
+				}
+
+				while( -1 != mSPV[is]->getOneSkyNeighbourt() ){
+					mSKYCounter--;
+				}
+
+			}
+		}
+
+		if( mSPV[is]->mClass == MAYBE ){
+			if( mSPV[is]->hasAdjMAYBE() ){
+				// therte is a chance, so add it back to listMAYBE,
+				listMAYBE.push_back( is );
+
+			} else {
+				// classificate it as NO_SKY2
+				mSPV[is]->mClass = NO_SKY2;
+			}
+		}
+
+		//createClassImage2();
+		//qDebug() << "(" << is << ")  " <<  mSKYCounter <<   "   ---------------------------------------------";
+		//cv::waitKey(0);
+
+	}
+}
+
+bool SkyDetect::similar(int is1, int is2)
+{
+
+	cv::Scalar mean1 = mSPV[is1]->getMeanHSV();
+	cv::Scalar mean2 = mSPV[is2]->getMeanHSV();
+	//qDebug() << "1meanHSV: " << mean1.val[0] << " " << mean1.val[1] << " " << mean1.val[2];
+	//qDebug() << "2meanHSV: " << mean2.val[0] << " " << mean2.val[1] << " " << mean2.val[2];
+
+	double r1 = mean1.val[0];
+	double g1 = mean1.val[1];
+	double b1 = mean1.val[2];
+
+	double r2 = mean2.val[0];
+	double g2 = mean2.val[1];
+	double b2 = mean2.val[2];
+
+	double dr, dg, db;
+
+	if( r1 > r2)	dr = r1-r2;
+	else			dr = r2-r1;
+	if( g1 > g2)	dg = g1-g2;
+	else			dg = g2-g1;
+	if( b1 > b2)	db = b1-b2;
+	else			db = b2-b1;
+
+	bool isSim = (dr < 8.5)  &&  (dg < 5)  &&  (db < 15);
+	if (!isSim) {isSim = (dr < 100)  &&  (dg < 5)  &&  (db < 50); }
+
+	return isSim;
+
+
+	//return dr + dg + db < 13;
+}
+
+void SkyDetect::createClassImage1()
+{
+	cv::Mat resMean = cv::Mat::zeros(cv::Size( mWidth, mHeight), CV_8UC3);
+	cv::Mat resMeanMaybe = cv::Mat::zeros(cv::Size( mWidth, mHeight), CV_8UC3);
+
+	SPV::const_iterator its;
+	for( its = mSPV.begin(); its != mSPV.end(); its++){
+		if( (*its)->mClass == SKY  ||  (*its)->mClass == MAYBE ){
+
+			cv::Scalar mean = (*its)->getMean();
+			PIXV pixels = (*its)->getPixelV();
+
+			// any name cant be 0, so we identify superpixels accoding theirs names
+			PIXV::const_iterator ipt;
+			for( ipt = pixels.begin(); ipt != pixels.end(); ipt++){
+
+				int ndx = resMean.step[0]* ipt->r + resMean.step[1]* ipt->c;
+				if( (*its)->mClass != MAYBE ){
+					resMean.data[ndx + 0] = mean.val[0];
+					resMean.data[ndx + 1] = mean.val[1];
+					resMean.data[ndx + 2] = mean.val[2];
+				}
+				if( (*its)->mClass == MAYBE ){
+					resMeanMaybe.data[ndx + 0] = mean.val[0];
+					resMeanMaybe.data[ndx + 1] = mean.val[1];
+					resMeanMaybe.data[ndx + 2] = mean.val[2];
 				}
 
 			}
 		}
 	}
+	cv::imshow( "resultMean Class 1  " , resMean  );
+	cv::imshow( "resultMean Class 1 with MAYBE ", resMeanMaybe  );
+
+}
+
+void SkyDetect::createClassImage2()
+{
+	cv::Mat resMean = cv::Mat::zeros(cv::Size( mWidth, mHeight), CV_8UC3);
+	cv::Mat resMeanMaybe = cv::Mat::zeros(cv::Size( mWidth, mHeight), CV_8UC3);
+	cv::Mat resMeanNo2 = cv::Mat::zeros(cv::Size( mWidth, mHeight), CV_8UC3);
+
+	SPV::const_iterator its;
+	for( its = mSPV.begin(); its != mSPV.end(); its++){
+		if( (*its)->mClass == SKY  ||  (*its)->mClass == MAYBE  || (*its)->mClass == NO_SKY2){
+
+			cv::Scalar mean = (*its)->getMean();
+			PIXV pixels = (*its)->getPixelV();
+
+			// any name cant be 0, so we identify superpixels accoding theirs names
+			PIXV::const_iterator ipt;
+			for( ipt = pixels.begin(); ipt != pixels.end(); ipt++){
+
+				int ndx = resMean.step[0]* ipt->r + resMean.step[1]* ipt->c;
+				if( (*its)->mClass == SKY ){
+					resMean.data[ndx + 0] = mean.val[0];
+					resMean.data[ndx + 1] = mean.val[1];
+					resMean.data[ndx + 2] = mean.val[2];
+				}
+				if( (*its)->mClass == MAYBE ){
+					resMeanMaybe.data[ndx + 0] = mean.val[0];
+					resMeanMaybe.data[ndx + 1] = mean.val[1];
+					resMeanMaybe.data[ndx + 2] = mean.val[2];
+				}
+				if( (*its)->mClass == NO_SKY2 ){
+					resMeanNo2.data[ndx + 0] = mean.val[0];
+					resMeanNo2.data[ndx + 1] = mean.val[1];
+					resMeanNo2.data[ndx + 2] = mean.val[2];
+				}
+
+			}
+		}
+	}
+
+
+	cv::imshow( "resultMean Class 2  " , resMean  );
+	//cv::imshow( "resultMean Class 2 with MAYBE ", resMeanMaybe  );
+	//cv::imshow( "resultMean Class 2 with NO_SKY2 ", resMeanNo2  );
+
 }
