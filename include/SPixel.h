@@ -43,7 +43,10 @@ public:
 	void		setName( int name);
 	int			getName() const;
 	void		setMean(const cv::Scalar mean);
+
 	cv::Scalar	getMean() const;
+	cv::Scalar	getMeanHSV() const;
+
 	void		computeBoundary();
 
 	void		addToListSKY(int adj);
@@ -51,6 +54,7 @@ public:
 	int			getOneSkyNeighbourt();
 	bool		hasAdjMAYBE();
 	ADJV		getAdjvMAYBE() const;
+	void		createMeanHSV();
 
 
 
@@ -64,6 +68,7 @@ private:
 	PIXV		mPixelV;
 	ADJV		mAdjV;
 	cv::Scalar	mMean;
+	cv::Scalar	mMeanHSV;
 
 	ADJV		mListSKY;
 	ADJV		mListMAYBE;

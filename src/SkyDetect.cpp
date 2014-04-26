@@ -432,7 +432,7 @@ int	SkyDetect::classificateSp(int idxSP)
 
 void SkyDetect::createSKYandMAYBELists()
 {
-	bool isSky;
+	int isSky;
 	int is;
 	std::list< int >::const_iterator its;
 
@@ -441,8 +441,8 @@ void SkyDetect::createSKYandMAYBELists()
 		ADJV::const_iterator ita;
 		ADJV adjencies = mSPV[*its]->getAdjV();
 
-		for( ita = adjencies.begin(); ita != adjencies.end(); ita++){
-
+		for( ita = adjencies.cbegin(); ita != adjencies.cend(); ita++){
+			//qDebug() << "--";
 			isSky = mSPV[*ita]->mClass;
 			if( isSky == SKY ){
 				mSPV[*its]->addToListSKY(*ita);
@@ -451,9 +451,11 @@ void SkyDetect::createSKYandMAYBELists()
 			} else if( isSky == MAYBE ){
 				mSPV[*its]->addToListMAYBE(*ita);
 			}
+
 		}
 
 	}
+
 }
 
 
@@ -468,6 +470,9 @@ void SkyDetect::classificate2()
 		if( mSPV[is]->mClass == MAYBE){
 			listMAYBE.push_back( is );
 			//qDebug() << "is0     " << is;
+			mSPV[is]->createMeanHSV();
+		} else if(mSPV[is]->mClass == SKY) {
+			mSPV[is]->createMeanHSV();
 		}
 	}
 
@@ -487,6 +492,11 @@ void SkyDetect::classificate2()
 			// exist SKY neighbourt
 			mSKYCounter--;
 
+			if(mSPV[adj]->mClass != SKY){
+				qDebug() << "error *******************";
+			}
+
+
 			isSimilar = similar( is, adj );
 
 			if( isSimilar ){
@@ -497,8 +507,10 @@ void SkyDetect::classificate2()
 				ADJV::const_iterator ita;
 				ADJV adjMAYBE = mSPV[is]->getAdjvMAYBE();
 				for( ita = adjMAYBE.begin(); ita != adjMAYBE.end(); ita++){
-					mSPV[*ita]->addToListSKY( is );
-					mSKYCounter++;
+					if(mSPV[*ita]->mClass == MAYBE){
+						mSPV[*ita]->addToListSKY( is );
+						mSKYCounter++;
+					}
 				}
 
 				while( -1 != mSPV[is]->getOneSkyNeighbourt() ){
@@ -518,14 +530,20 @@ void SkyDetect::classificate2()
 			}
 		}
 
+		//createClassImage2();
+		qDebug() << "----";
+		//cv::waitKey(1);
+
 	}
 }
 
 bool SkyDetect::similar(int is1, int is2)
 {
 
-	cv::Scalar mean1 = mSPV[is1]->getMean();
-	cv::Scalar mean2 = mSPV[is2]->getMean();
+	cv::Scalar mean1 = mSPV[is1]->getMeanHSV();
+	cv::Scalar mean2 = mSPV[is2]->getMeanHSV();
+	qDebug() << "1meanHSV: " << mean1.val[0] << " " << mean1.val[1] << " " << mean1.val[2];
+	qDebug() << "2meanHSV: " << mean2.val[0] << " " << mean2.val[1] << " " << mean2.val[2];
 
 	double r1 = mean1.val[0];
 	double g1 = mean1.val[1];
@@ -544,7 +562,9 @@ bool SkyDetect::similar(int is1, int is2)
 	if( b1 > b2)	db = b1-b2;
 	else			db = b2-b1;
 
-	return (dr < 2)  &&  (dg < maxd)  &&  (db < maxd);
+	bool res =  (dr < 1.5)  &&  (dg < 5)  &&  (db < 5);
+	qDebug() << res;
+	return res;
 
 	//return dr + dg + db < 13;
 }

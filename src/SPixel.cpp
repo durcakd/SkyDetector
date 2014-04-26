@@ -1,5 +1,8 @@
 #include "SPixel.h"
 
+#include <opencv2/imgproc/imgproc.hpp>
+
+
 #include <QDebug>
 
 SPixel::SPixel()
@@ -97,6 +100,11 @@ cv::Scalar SPixel::getMean() const
 	return mMean;
 }
 
+cv::Scalar SPixel::getMeanHSV() const
+{
+	return mMeanHSV;
+}
+
 void SPixel::addToListSKY(int adj)
 {
 	mListSKY.push_back(adj);
@@ -128,5 +136,23 @@ ADJV SPixel::getAdjvMAYBE() const
 	return mListMAYBE;
 }
 
+void SPixel::createMeanHSV()
+{
+	//float h, s, v;
+	//RGB2HSV( mMean.val[0], mMean.val[1], mMean.val[2], h, s, v );
+	//mMeanHSV = cv::Scalar(h*256, s*256, v);
+
+	cv::Mat meanMat( 1, 1, CV_8UC3, mMean );
+	cv::cvtColor( meanMat, meanMat, CV_BGR2HSV );
+
+	mMeanHSV.val[0] = meanMat.data[0];
+	mMeanHSV.val[1] = meanMat.data[1];
+	mMeanHSV.val[2] = meanMat.data[2];
+
+	//qDebug() << "1mean:    " << mMean.val[0] << " " << mMean.val[1] << " " << mMean.val[2];
+	qDebug() << "2meanHSV: " << mMeanHSV.val[0] << " " << mMeanHSV.val[1] << " " << mMeanHSV.val[2];
+
+
+}
 
 
