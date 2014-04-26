@@ -66,6 +66,8 @@ private:
 	//cv::Mat mImageRes;
 	SPV mSPV;
 
+	double maxd;
+
 };
 
 #endif

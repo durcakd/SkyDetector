@@ -13,10 +13,11 @@
 SkyDetect::SkyDetect()
 {
 	mSlico			= new SLIC();
-	mSpcount		= 1000;
+	mSpcount		= 600;
 	mCompactness	= 10.0;
 	mLabels			= NULL;
 
+	maxd		= 10.0;
 	mSKYCounter = 0;
 }
 
@@ -30,7 +31,7 @@ SkyDetect::~SkyDetect(void)
 int SkyDetect::detect()
 {
 	QString saveLocation = "C:\\Users\\Durcak\\Desktop\\SLICO\\";
-	QString filename	 = "C:\\Users\\Durcak\\Desktop\\SLICO\\05.jpg";
+	QString filename	 = "C:\\Users\\Durcak\\Desktop\\SLICO\\hrad4.jpg";
 
 	openImage( filename );
 	applyFiltersBefore();
@@ -402,7 +403,7 @@ int	SkyDetect::classificateSp(int idxSP)
 	cv::cvtColor( meanMat, meanMat, CV_BGR2HSV );
 
 	// SKY
-	cv::inRange( meanMat, cv::Scalar(95, 0, 110), cv::Scalar(125, 255, 255), mask);
+	cv::inRange( meanMat, cv::Scalar(100, 50, 150), cv::Scalar(120, 200, 255), mask);
 	if( ! mask.at<uchar>(0,0) == 0 ){
 		//qDebug() << "SKY";
 		mSPV[idxSP]->mClass = SKY;
@@ -484,33 +485,54 @@ void SkyDetect::classificate2()
 			if(adj != -1 )  // exist SKY neighbourt
 				mSKYCounter--;
 
-				isSimilar = similar( is, adj );
+			isSimilar = similar( is, adj );
 
-				if( isSimilar ){
-					// classifite it as SKY
-					mSPV[is]->mClass = SKY;
-					// add his to his adj as SKY
+			if( isSimilar ){
+				// classifite it as SKY
+				mSPV[is]->mClass = SKY;
+				// add his to his adj as SKY
 
-					// ----------------?????????
-					// !!!   mSKYCounter++;
+				// ----------------?????????
+				// !!!   mSKYCounter++;
 
-				} else if( mSPV[is]->hasAdjMAYBE() ){
-					// therte is a chance, so add it back to listMAYBE,
-					listMAYBE.push_back( is );
+			} else if( mSPV[is]->hasAdjMAYBE() ){
+				// therte is a chance, so add it back to listMAYBE,
+				listMAYBE.push_back( is );
 
-				} else {
-					// classificate it as NO_SKY2
-					mSPV[is]->mClass = NO_SKY2;
-				}
-
+			} else {
+				// classificate it as NO_SKY2
+				mSPV[is]->mClass = NO_SKY2;
 			}
+
+		}
 	}
 
 }
 
 bool SkyDetect::similar(int is1, int is2)
 {
-	return false;
+
+	cv::Scalar mean1 = mSPV[is1]->getMean();
+	cv::Scalar mean2 = mSPV[is2]->getMean();
+
+	double r1 = mean1.val[0];
+	double g1 = mean1.val[1];
+	double b1 = mean1.val[2];
+
+	double r2 = mean2.val[0];
+	double g2 = mean2.val[1];
+	double b2 = mean2.val[2];
+
+	double dr, dg, db;
+
+	if( r1 > r2)	dr = r1-r2;
+	else			dr = r2-r1;
+	if( g1 > g2)	dg = g1-g2;
+	else			dg = g2-g1;
+	if( b1 > b2)	db = b1-b2;
+	else			db = b2-b1;
+
+	return (dr < maxd)  &&  (dg < maxd)  &&  (db < maxd);
 }
 
 void SkyDetect::createClassImage()
