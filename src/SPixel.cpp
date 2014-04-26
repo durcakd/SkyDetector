@@ -143,9 +143,6 @@ int	SPixel::getListSKYSize() const
 
 void SPixel::createMeanHSV()
 {
-	//float h, s, v;
-	//RGB2HSV( mMean.val[0], mMean.val[1], mMean.val[2], h, s, v );
-	//mMeanHSV = cv::Scalar(h*256, s*256, v);
 
 	cv::Mat meanMat( 1, 1, CV_8UC3, mMean );
 	cv::cvtColor( meanMat, meanMat, CV_BGR2HSV );
@@ -155,8 +152,7 @@ void SPixel::createMeanHSV()
 	mMeanHSV.val[2] = meanMat.data[2];
 
 	//qDebug() << "1mean:    " << mMean.val[0] << " " << mMean.val[1] << " " << mMean.val[2];
-	qDebug() << "2meanHSV: " << mMeanHSV.val[0] << " " << mMeanHSV.val[1] << " " << mMeanHSV.val[2];
-
+	//qDebug() << "2meanHSV: " << mMeanHSV.val[0] << " " << mMeanHSV.val[1] << " " << mMeanHSV.val[2];
 
 }
 
