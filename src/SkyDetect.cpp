@@ -31,7 +31,7 @@ SkyDetect::~SkyDetect(void)
 int SkyDetect::detect()
 {
 	QString saveLocation = "C:\\Users\\Durcak\\Desktop\\SLICO\\";
-	QString filename	 = "C:\\Users\\Durcak\\Desktop\\SLICO\\05.jpg";
+	QString filename	 = "C:\\Users\\Durcak\\Desktop\\SLICO\\hrad1.jpg";
 
 	openImage( filename );
 	applyFiltersBefore();
