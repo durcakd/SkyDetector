@@ -5,15 +5,15 @@
 #include <QPushButton>
 #include <QLayout>
 #include <QLabel>
-//#include <QLineEdit>
+#include <QLineEdit>
 //#include <QListWidget>
-//#include <QProgressBar>
-//#include <QCheckBox>
-//#include <QGroupBox>
-#include <QStatusBar>
+
+
 
 #include "SkyDetectorThread.h"
-
+#include "SpinBox.h"
+#include "LineEdit.h"
+#include "constants.h"
 
 class SkyDetectorDialog : public QDialog
 	{
@@ -21,43 +21,55 @@ class SkyDetectorDialog : public QDialog
 public:
 	explicit SkyDetectorDialog(QWidget *parent = 0);
 
-	//QListWidget *getListWidged() const	{ return listWidged; }
-	//QPushButton *getStartB() const		{ return _startB; }
-	//QPushButton *getOpenFileB() const	{ return _openFileB; }
-	//const SkyDetectorThread *getThread() const		{ return &_thread; }
-	//QProgressBar *getBarPB() const	{ return _barPB; }
-	//QStatusBar	*getStatusBar() const	{ return _statusBar; }
+	const SkyDetectorThread *getThread() const		{ return &_thread; }
 
-signals:
-	//void requestForReadFile(const QString &);
-	//void sentStatusMsg( const QString &msg, int timeout = 0 ) const;
 
 public slots:
-	//void addStrToListWidged(const QString &str);
-	//void threadDone(const QString msg);
+	void threadDone();
 
 private slots:
 	bool open();
 	void start();
 
-	//void on_popSizeLE_textChanged(const QString &str);
-
 private:
-	SkyDetectorThread thread;
-	//QListWidget *listWidged;
-	//QStatusBar	*statusBar;
+	void prepareParam();
 
+
+	SkyDetectorThread _thread;
 
 	QPushButton *_openFileB;
 	QPushButton *_startB;
+	PARAMETERS	_parm;
 
 
+	QString		_fileName;
+	QLineEdit	*_spcountLE;
+	QLineEdit	*_compactnessLE;
+	SpinBox	*_sky1SB;
+	SpinBox	*_sky2SB;
+	SpinBox	*_sky3SB;
+	SpinBox	*_sky4SB;
+	SpinBox	*_sky5SB;
+	SpinBox	*_sky6SB;
+	SpinBox	*_maybe1SB;
+	SpinBox	*_maybe2SB;
+	SpinBox	*_maybe3SB;
+	SpinBox	*_maybe4SB;
+	SpinBox	*_maybe5SB;
+	SpinBox	*_maybe6SB;
+	SpinBox	*_white1SB;
+	SpinBox	*_white2SB;
+	SpinBox	*_white3SB;
+	SpinBox	*_white4SB;
+	SpinBox	*_white5SB;
+	SpinBox	*_white6SB;
 
-	//QGroupBox	*_parametersGroup;
-
-	//QProgressBar *_barPB;
-
-	//PARAMETERS parm;
+	LineEdit	*_sim1aLE;
+	LineEdit	*_sim1bLE;
+	LineEdit	*_sim1cLE;
+	LineEdit	*_sim2aLE;
+	LineEdit	*_sim2bLE;
+	LineEdit	*_sim2cLE;
 
 	};
 

@@ -12,7 +12,7 @@
 class SkyDetectorController
 	{
 public:
-	SkyDetectorController(QApplication *app);
+	SkyDetectorController(QApplication *app = NULL);
 	~SkyDetectorController();
 
 private:
