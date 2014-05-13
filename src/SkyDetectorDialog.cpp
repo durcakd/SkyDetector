@@ -12,7 +12,7 @@ SkyDetectorDialog::SkyDetectorDialog(QWidget *parent) :
 	_startB		= new QPushButton(tr("Start"));
 	_openFileB	= new QPushButton(tr("Open"));
 
-	_fileName = "";
+	_fileName = "C:\\Users\\Durcak\\Desktop\\SLICO\\hrad1.jpg";
 	_spcountLE = new QLineEdit("1000");
 	_compactnessLE = new QLineEdit("10.0");
 	_sky1SB		= new SpinBox(100);
@@ -131,12 +131,12 @@ bool SkyDetectorDialog::open(){
 
 // start thread
 void  SkyDetectorDialog::start(){
-	prepareParam();
-
 	if( _thread.isRunning()){
 		_thread.setAbort();	// Tell the thread to abort
 
 	} else {
+		prepareParam();
+		_thread.setParameters( _parm );
 		_startB->setText(tr("Stop"));
 		_thread.start();
 	}

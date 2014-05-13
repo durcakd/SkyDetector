@@ -10,8 +10,9 @@
 #include "SLIC.h"
 
 
-SkyDetect::SkyDetect()
+SkyDetect::SkyDetect( const PARAMETERS &parm )
 {
+	mParm			= parm;
 	mSlico			= new SLIC();
 	mSpcount		= 1000;
 	mCompactness	= 10.0;
@@ -26,6 +27,7 @@ SkyDetect::~SkyDetect(void)
 	if(mLabels){
 		delete [] mLabels;
 	}
+	delete mSlico;
 }
 
 int SkyDetect::detect()

@@ -8,6 +8,7 @@
 #include <opencv2/core/core.hpp>
 
 #include <QString>
+#include <constants.h>
 
 class SLIC;
 //typedef unsigned int UINT;
@@ -20,7 +21,7 @@ class SkyDetect
 {
 public:
 
-	SkyDetect( );
+	SkyDetect( const PARAMETERS &parm );
 	~SkyDetect(void);
 
 	int		detect();
@@ -46,6 +47,8 @@ public:
 	bool	similar(int is1, int is2);
 
 private:
+
+	PARAMETERS mParm;
 
 	int		mSpcount;
 	double	mCompactness;

@@ -6,8 +6,6 @@
 #include "SkyDetectorDialog.h"
 #include "SkyDetect.h"
 
-//(double[]);
-//Q_DECLARE_METATYPE(double[] );
 
 class SkyDetectorController
 	{

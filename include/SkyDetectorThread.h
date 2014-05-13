@@ -2,6 +2,8 @@
 #define SKYDETECTORTHREAD_H
 
 #include <QThread>
+#include "constants.h"
+#include "SkyDetect.h"
 
 
 class SkyDetectorThread : public QThread
@@ -10,18 +12,16 @@ class SkyDetectorThread : public QThread
 public:
 	explicit SkyDetectorThread();
 
-	//void setParameters( const PARAMETERS &parm);
+	void setParameters( const PARAMETERS &parm);
 	void setAbort();
-
-signals:
 
 protected:
 	void run();
 
 private:
 	bool _abort;
-	//PARAMETERS _parm;
-
+	PARAMETERS _parm;
+	SkyDetect *_skyDetector;
 };
 
 #endif
