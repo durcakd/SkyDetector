@@ -32,6 +32,9 @@ typedef struct parameters{
 	double	 sim2a;
 	double	 sim2b;
 	double	 sim2c;
+	double	 sim3a;
+	double	 sim3b;
+	double	 sim3c;
 	} PARAMETERS;
 
 

@@ -43,9 +43,11 @@ public:
 	void		setName( int name);
 	int			getName() const;
 	void		setMean(const cv::Scalar mean);
+	void		setStdDev(const cv::Scalar stdDev);
 
 	cv::Scalar	getMean() const;
 	cv::Scalar	getMeanHSV() const;
+	cv::Scalar	getStdDev() const;
 
 	void		computeBoundary();
 
@@ -70,6 +72,7 @@ private:
 	ADJV		mAdjV;
 	cv::Scalar	mMean;
 	cv::Scalar	mMeanHSV;
+	cv::Scalar	mStdDev;
 
 	ADJV		mListSKY;
 	ADJV		mListMAYBE;

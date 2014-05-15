@@ -31,6 +31,7 @@ SkyDetect::~SkyDetect(void)
 
 int SkyDetect::detect()
 {
+	qDebug() << "DETECT ..... ";
 	QString filename	 = mParm.fileName;
 
 	openImage( filename );
@@ -42,11 +43,12 @@ int SkyDetect::detect()
 	createPattern();
 	initSPixelAdj16();
 
-	classificate();
+	//classificate();
+	classificateTOP();
 	createClassImage1();
 	classificate2();
 	createClassImage2();
-
+	qDebug() << "DONE ";
 	cv::waitKey(0);
 
 	return 0;
@@ -72,6 +74,9 @@ int SkyDetect::doSlico( const QString filename )
 	mSlico->PerformSLICO_ForGivenK( imgBuf, mWidth, mHeight,
 									mLabels, numlabels,
 									mSpcount, mCompactness ); //for a given number K of superpixels
+	//mSlico->PerformSLICO_ForGivenStepSize( imgBuf, mWidth, mHeight,
+	//									   mLabels, numlabels,
+	//									   mSpcount, mCompactness ); //for a given number K of superpixels
 	qDebug() << " - PerformSLICO_ForGivenK:	Done";
 
 	mSlico->DrawContoursAroundSegmentsTwoColors( imgBuf, mLabels,
@@ -220,16 +225,14 @@ void SkyDetect::initSPixelAdj16()
 		// compute mean
 		//(*its)->setMean( cv::mean( mSlicoRes, mask8 ));  // old
 
-		cv::Scalar mean, stdev;
-		cv::meanStdDev(mSlicoRes, mean, stdev, mask8);
+		cv::Scalar mean, stdDev;
+		cv::meanStdDev(mSlicoRes, mean, stdDev, mask8);
+		(*its)->setStdDev( stdDev);  // new
 		(*its)->setMean( mean);  // new
-
-
 		(*its)->createMeanHSV();
 
-		cv::Scalar meanHSV = (*its)->getMeanHSV();
-
-		qDebug() << "mean: " << meanHSV.val[0] << " " << meanHSV.val[1] << " " << meanHSV.val[2] <<  "         "  << stdev.val[0] << " " << stdev.val[1] << " " << stdev.val[2];
+		//cv::Scalar meanHSV = (*its)->getMeanHSV();
+		//qDebug() << "mean: " << meanHSV.val[0] << " " << meanHSV.val[1] << " " << meanHSV.val[2] <<  "         "  << stdDev.val[0] << " " << stdDev.val[1] << " " << stdDev.val[2];
 		//cv::Mat test  = cv::Mat( mWidth, mHeight, CV_8UC3, mean );
 		//cv::imshow("mean", test );
 
@@ -281,11 +284,52 @@ void SkyDetect::initSPixelAdj16()
 
 		//cv::waitKey(0);
 	}
+	qDebug() << "Prepare done, detecting ...";
 }
 
 
 ////   Detecting   //////////////////////////////////////////////////////
 
+
+void SkyDetect::classificateTOP()
+{
+	std::priority_queue<int, vector<int>, compare> pqueue;
+
+	// get indexes of superpixels that are on the top of image
+	int is;
+	for( is = 0; is < mSPV.size(); is++){
+		// is on the top of image
+		if( mSPV[is]->mTop == 0 ){
+			pqueue.  push( is );
+			//qDebug() << "is0     " << is;
+		}
+		else{
+			mSPV[is]->mClass = MAYBE;
+		}
+	}
+
+	// while pqueue is not empty, classifite superpixel in it
+	while( !pqueue.empty() ){
+		// get index of superpixel,   clasifite it,
+		// if sky, add its neighbours into queue
+		int idxSP = pqueue.top();
+		pqueue.pop();
+
+		cv::Scalar meanHSV = mSPV[idxSP]->getMeanHSV();
+		cv::Scalar stdDev = mSPV[idxSP]->getStdDev();
+		qDebug() << "TOP mean: " << meanHSV.val[0] << " " << meanHSV.val[1] << " " << meanHSV.val[2] <<  "         "  << stdDev.val[0] << " " << stdDev.val[1] << " " << stdDev.val[2];
+
+
+
+		// classi
+		mSPV[idxSP]->mClass = SKY;
+				/*
+		int isSky = mSPV[idxSP]->mClass;
+		if( isSky == UNKNOWN ){
+			isSky = classificateSp( idxSP );
+		}*/
+	}
+}
 
 
 
@@ -343,12 +387,12 @@ void SkyDetect::classificate()
 int	SkyDetect::classificateSp(int idxSP)
 {
 
-	cv::Scalar mean = mSPV[idxSP]->getMean();
+	cv::Scalar mean = mSPV[idxSP]->getMeanHSV();
 
 	cv::Mat meanMat( 1, 1, CV_8UC3, mean );
 	cv::Mat mask( 1, 1, CV_8UC1 );
 
-	cv::cvtColor( meanMat, meanMat, CV_BGR2HSV );
+	//cv::cvtColor( meanMat, meanMat, CV_BGR2HSV );
 
 	// SKY
 	cv::inRange( meanMat, cv::Scalar(mParm.sky1, mParm.sky2, mParm.sky3), cv::Scalar(mParm.sky4, mParm.sky5, mParm.sky6), mask);
@@ -512,6 +556,7 @@ bool SkyDetect::similar(int is1, int is2)
 
 	bool isSim = (dr < mParm.sim1a)  &&  (dg < mParm.sim1b)  &&  (db < mParm.sim1c);
 	if (!isSim) {isSim = (dr < mParm.sim2a)  &&  (dg < mParm.sim2b)  &&  (db < mParm.sim2c); }
+	if (!isSim) {isSim = (dr < mParm.sim3a)  &&  (dg < mParm.sim3b)  &&  (db < mParm.sim3c); }
 
 	return isSim;
 

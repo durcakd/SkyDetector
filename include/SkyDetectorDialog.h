@@ -70,6 +70,9 @@ private:
 	LineEdit	*_sim2aLE;
 	LineEdit	*_sim2bLE;
 	LineEdit	*_sim2cLE;
+	LineEdit	*_sim3aLE;
+	LineEdit	*_sim3bLE;
+	LineEdit	*_sim3cLE;
 
 	};
 

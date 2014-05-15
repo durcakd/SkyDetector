@@ -36,6 +36,7 @@ public:
 	void	initSPixelAdj16();
 
 	void	classificate();
+	void	classificateTOP();
 	int		classificateSp(int idxSP);
 	void	createClassImage1();
 	void	createClassImage2();

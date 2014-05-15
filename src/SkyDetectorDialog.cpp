@@ -36,12 +36,15 @@ SkyDetectorDialog::SkyDetectorDialog(QWidget *parent) :
 	_white5SB	= new SpinBox(255);
 	_white6SB	= new SpinBox(255);
 
-	_sim1aLE	= new LineEdit(8.5);
+	_sim1aLE	= new LineEdit(8);
 	_sim1bLE	= new LineEdit(5);
-	_sim1cLE	= new LineEdit(15);
-	_sim2aLE	= new LineEdit(100);
-	_sim2bLE	= new LineEdit(5);
-	_sim2cLE	= new LineEdit(50);
+	_sim1cLE	= new LineEdit(5);
+	_sim2aLE	= new LineEdit(5);
+	_sim2bLE	= new LineEdit(40);
+	_sim2cLE	= new LineEdit(15);
+	_sim3aLE	= new LineEdit(5);
+	_sim3bLE	= new LineEdit(10);
+	_sim3cLE	= new LineEdit(42);
 
 	// LAYOUTING
 	QGridLayout *paramLayout1 = new QGridLayout;
@@ -73,10 +76,14 @@ SkyDetectorDialog::SkyDetectorDialog(QWidget *parent) :
 	paramLayout2->addWidget( _sim1aLE,1,0);
 	paramLayout2->addWidget( _sim1bLE,1,1);
 	paramLayout2->addWidget( _sim1cLE,1,2);
-	paramLayout2->addWidget( new QLabel(tr("Sim 2 ")),3,0);
-	paramLayout2->addWidget( _sim2aLE,4,0);
-	paramLayout2->addWidget( _sim2bLE,4,1);
-	paramLayout2->addWidget( _sim2cLE,4,2);
+	paramLayout2->addWidget( new QLabel(tr("Sim 2 ")),2,0);
+	paramLayout2->addWidget( _sim2aLE,3,0);
+	paramLayout2->addWidget( _sim2bLE,3,1);
+	paramLayout2->addWidget( _sim2cLE,3,2);
+	paramLayout2->addWidget( new QLabel(tr("Sim 3 ")),4,0);
+	paramLayout2->addWidget( _sim3aLE,5,0);
+	paramLayout2->addWidget( _sim3bLE,5,1);
+	paramLayout2->addWidget( _sim3cLE,5,2);
 
 	paramLayout3->addWidget( new QLabel(tr("SP count")),0,0);
 	paramLayout3->addWidget( _spcountLE,0,1);
@@ -175,4 +182,7 @@ void SkyDetectorDialog::prepareParam()
 	_parm.sim2a		= _sim2aLE->getdValue();
 	_parm.sim2b		= _sim2bLE->getdValue();
 	_parm.sim2c		= _sim2cLE->getdValue();
+	_parm.sim3a		= _sim3aLE->getdValue();
+	_parm.sim3b		= _sim3bLE->getdValue();
+	_parm.sim3c		= _sim3cLE->getdValue();
 }

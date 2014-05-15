@@ -94,6 +94,10 @@ void SPixel::setMean(const cv::Scalar mean)
 {
 	mMean = mean;
 }
+void SPixel::setStdDev(const cv::Scalar stdDev)
+{
+	mStdDev = stdDev;
+}
 
 cv::Scalar SPixel::getMean() const
 {
@@ -103,6 +107,11 @@ cv::Scalar SPixel::getMean() const
 cv::Scalar SPixel::getMeanHSV() const
 {
 	return mMeanHSV;
+}
+
+cv::Scalar SPixel::getStdDev() const
+{
+	return mStdDev;
 }
 
 void SPixel::addToListSKY(int adj)
