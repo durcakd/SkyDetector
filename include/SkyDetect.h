@@ -29,14 +29,12 @@ public:
 	void	openImage(const QString filename);
 	void	applyFiltersBefore();
 	void	createPicBuffer( unsigned int*&	imgBuffer);
-	int		doSlico( const QString filename, const QString saveLocation );
+	int		doSlico(const QString filename);
 
 	void	initSPixelsFromLabels( const int* labels);
 	void	createPattern();
-	void	createPattern( const int* labels);
 	void	initSPixelAdj16();
 
-	void	mergeSP();
 	void	classificate();
 	int		classificateSp(int idxSP);
 	void	createClassImage1();
@@ -67,10 +65,9 @@ private:
 	int		mSKYCounter;
 
 	cv::Mat mImage2;
-	//cv::Mat mImageRes;
 	SPV mSPV;
 
-	double maxd;
+
 
 };
 

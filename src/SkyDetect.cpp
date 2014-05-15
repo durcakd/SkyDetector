@@ -14,11 +14,10 @@ SkyDetect::SkyDetect( const PARAMETERS &parm )
 {
 	mParm			= parm;
 	mSlico			= new SLIC();
-	mSpcount		= 1000;
-	mCompactness	= 10.0;
+	mSpcount		= mParm.spcount;
+	mCompactness	= mParm.compactness;
 	mLabels			= NULL;
 
-	maxd		= 30.0;
 	mSKYCounter = 0;
 }
 
@@ -32,19 +31,17 @@ SkyDetect::~SkyDetect(void)
 
 int SkyDetect::detect()
 {
-	QString saveLocation = "C:\\Users\\Durcak\\Desktop\\SLICO\\";
-	QString filename	 = "C:\\Users\\Durcak\\Desktop\\SLICO\\hrad1.jpg";
+	QString filename	 = mParm.fileName;
 
 	openImage( filename );
 	applyFiltersBefore();
 
-	doSlico( filename, saveLocation);
+	doSlico( filename);
 
 	initSPixelsFromLabels( mLabels);
 	createPattern();
 	initSPixelAdj16();
 
-	//mergeSP();
 	classificate();
 	createClassImage1();
 	classificate2();
@@ -55,9 +52,8 @@ int SkyDetect::detect()
 	return 0;
 }
 
-int SkyDetect::doSlico( const QString filename, const QString saveLocation )
+int SkyDetect::doSlico( const QString filename )
 {
-	string stdSaveLoc   = saveLocation.toStdString();
 	string stdFilename  = filename.toStdString();
 
 	unsigned int *imgBuf = NULL;
@@ -84,8 +80,8 @@ int SkyDetect::doSlico( const QString filename, const QString saveLocation )
 
 	mSlicoRes = cv::Mat( mHeight, mWidth, CV_8UC4, imgBuf );
 
-	cv::imshow("SLICO result image", mSlicoRes );
-	cv::waitKey(1);
+	//cv::imshow("SLICO result image", mSlicoRes );
+	//cv::waitKey(1);
 
 	return 0;
 }
@@ -166,19 +162,11 @@ void SkyDetect::initSPixelsFromLabels(const int* labels)
 		(*ist)->computeBoundary();
 	}
 
-	// check
-	//mSPV[0]->getPixelV();
-}
-
-void SkyDetect::createPattern( const int* labels)
-{
-
 }
 
 void SkyDetect::createPattern()
 {
 	cv::Mat pattern16(cv::Size( mWidth, mHeight), CV_16UC1);
-	cv::Mat pattern8(cv::Size( mWidth, mHeight), CV_8UC1);
 	int		name;
 
 
@@ -198,6 +186,8 @@ void SkyDetect::createPattern()
 	}
 
 	mPattern16 = pattern16;
+
+	//cv::Mat pattern8(cv::Size( mWidth, mHeight), CV_8UC1);
 	//pattern16.convertTo( pattern8, CV_8UC1);
 	//cv::imshow("Pattern8", pattern8);
 	//cv::waitKey(1);
@@ -228,11 +218,18 @@ void SkyDetect::initSPixelAdj16()
 		}
 
 		// compute mean
-		(*its)->setMean( cv::mean( mSlicoRes, mask8 ));
+		//(*its)->setMean( cv::mean( mSlicoRes, mask8 ));  // old
+
+		cv::Scalar mean, stdev;
+		cv::meanStdDev(mSlicoRes, mean, stdev, mask8);
+		(*its)->setMean( mean);  // new
 
 
-		cv::Scalar mean = (*its)->getMean();
-		qDebug() << "mean: " << mean.val[0] << " " << mean.val[1] << " " << mean.val[2];
+		(*its)->createMeanHSV();
+
+		cv::Scalar meanHSV = (*its)->getMeanHSV();
+
+		qDebug() << "mean: " << meanHSV.val[0] << " " << meanHSV.val[1] << " " << meanHSV.val[2] <<  "         "  << stdev.val[0] << " " << stdev.val[1] << " " << stdev.val[2];
 		//cv::Mat test  = cv::Mat( mWidth, mHeight, CV_8UC3, mean );
 		//cv::imshow("mean", test );
 
@@ -243,26 +240,11 @@ void SkyDetect::initSPixelAdj16()
 		cv::bitwise_xor( mask8, dmask8, mask8 );
 
 		// mask pattern
-		cv::Mat masked8;
 		cv::Mat masked16;
 		mPattern16.copyTo(masked16, mask8);
 
 
 
-		/*
-		cv::Mat meanMat( 1, 1, CV_8UC3, mean );
-		qDebug() << meanMat.at<uchar>(0,0);
-		cv::cvtColor( meanMat, meanMat, CV_BGR2HSV );
-		qDebug() << meanMat.at<uchar>(0,0)  << "         " << "";
-
-
-		mSlicoRes.copyTo(masked16, dmask8);
-		masked16.convertTo(masked8, CV_8UC1);
-		cv::imshow("masked", masked8 );
-		cv::waitKey(0);
-
-		mPattern16.copyTo(masked16, mask8);
-*/
 
 		// get adjacency
 		set<int> adjSet;
@@ -299,51 +281,13 @@ void SkyDetect::initSPixelAdj16()
 
 		//cv::waitKey(0);
 	}
-
-	//cv::cvtColor( mSlicoRes, mSlicoRes, CV_HSV2RGB );
 }
 
-void SkyDetect::mergeSP()
-{
 
-	cv::Mat meanMat(cv::Size( mWidth, mHeight), CV_8UC3);
-	cv::Mat meanMatHsv(cv::Size( mWidth, mHeight), CV_8UC3);
-	cv::Mat meanMask = cv::Mat::zeros(cv::Size( mWidth, mHeight), CV_8UC1);
-	cv::Mat meanMatRes(cv::Size( mWidth, mHeight), CV_8UC3);
-	int r, c;
+////   Detecting   //////////////////////////////////////////////////////
 
-	SPV::const_iterator its;
-	for( its = mSPV.begin(); its != mSPV.end(); its++){
-		cv::Scalar mean = (*its)->getMean();
-		//qDebug() << "mean: " << mean.val[0] << " " << mean.val[1] << " " << mean.val[2];
-		//cv::Mat test  = cv::Mat( mWidth, mHeight, CV_8UC3, mean );
-		//cv::imshow("mean", test );
 
-		PIXV pixels = (*its)->getPixelV();
 
-		// any name cant be 0, so we identify superpixels accoding theirs names
-		PIXV::const_iterator ipt;
-		for( ipt = pixels.begin(); ipt != pixels.end(); ipt++){
-			//meanMat.at<unsigned short>(ipt->r, ipt->c) = name;
-			r = ipt->r;
-			c = ipt->c;
-			int ndx = meanMat.step[0]*r + meanMat.step[1]*c;
-			meanMat.data[ndx + 0] = mean.val[0];
-			meanMat.data[ndx + 1] = mean.val[1];
-			meanMat.data[ndx + 2] = mean.val[2];
-
-		}
-	}
-
-	cv::imshow("meanMat", meanMat);
-
-	cv::cvtColor( meanMat, meanMatHsv, CV_BGR2HSV );
-	cv::inRange( meanMatHsv, cv::Scalar(100, 90, 140), cv::Scalar(125, 255, 255), meanMask);
-	meanMat.copyTo(meanMatRes, meanMask);
-
-	cv::imshow("meanMasked", meanMatRes);
-
-}
 
 void SkyDetect::classificate()
 {
@@ -407,7 +351,7 @@ int	SkyDetect::classificateSp(int idxSP)
 	cv::cvtColor( meanMat, meanMat, CV_BGR2HSV );
 
 	// SKY
-	cv::inRange( meanMat, cv::Scalar(100, 80, 130), cv::Scalar(120, 255, 255), mask);
+	cv::inRange( meanMat, cv::Scalar(mParm.sky1, mParm.sky2, mParm.sky3), cv::Scalar(mParm.sky4, mParm.sky5, mParm.sky6), mask);
 	if( ! mask.at<uchar>(0,0) == 0 ){
 		//qDebug() << "SKY";
 		mSPV[idxSP]->mClass = SKY;
@@ -416,7 +360,7 @@ int	SkyDetect::classificateSp(int idxSP)
 	}
 
 	// MAYBE
-	cv::inRange( meanMat, cv::Scalar(85, 0, 100), cv::Scalar(165, 255, 255), mask);
+	cv::inRange( meanMat, cv::Scalar(mParm.maybe1, mParm.maybe2, mParm.maybe3), cv::Scalar(mParm.maybe4, mParm.maybe5, mParm.maybe6), mask);
 	if( ! mask.at<uchar>(0,0) == 0 ){
 		//qDebug() << "MAYBE";
 		mSPV[idxSP]->mClass = MAYBE;
@@ -424,7 +368,7 @@ int	SkyDetect::classificateSp(int idxSP)
 	}
 
 	// white
-	cv::inRange( meanMat, cv::Scalar(0, 0, 150), cv::Scalar(255, 255, 255), mask);
+	cv::inRange( meanMat, cv::Scalar(mParm.white1, mParm.white2, mParm.white3), cv::Scalar(mParm.white4, mParm.white5, mParm.white6), mask);
 	if( ! mask.at<uchar>(0,0) == 0 ){
 		//qDebug() << "MAYBE";
 		mSPV[idxSP]->mClass = MAYBE;
@@ -566,8 +510,8 @@ bool SkyDetect::similar(int is1, int is2)
 	if( b1 > b2)	db = b1-b2;
 	else			db = b2-b1;
 
-	bool isSim = (dr < 8.5)  &&  (dg < 5)  &&  (db < 15);
-	if (!isSim) {isSim = (dr < 100)  &&  (dg < 5)  &&  (db < 50); }
+	bool isSim = (dr < mParm.sim1a)  &&  (dg < mParm.sim1b)  &&  (db < mParm.sim1c);
+	if (!isSim) {isSim = (dr < mParm.sim2a)  &&  (dg < mParm.sim2b)  &&  (db < mParm.sim2c); }
 
 	return isSim;
 
@@ -606,8 +550,8 @@ void SkyDetect::createClassImage1()
 			}
 		}
 	}
-	cv::imshow( "resultMean Class 1  " , resMean  );
-	cv::imshow( "resultMean Class 1 with MAYBE ", resMeanMaybe  );
+	cv::imshow( "1 SKY    " , resMean  );
+	cv::imshow( "1 MAYBE ", resMeanMaybe  );
 
 }
 
@@ -650,7 +594,7 @@ void SkyDetect::createClassImage2()
 	}
 
 
-	cv::imshow( "resultMean Class 2  " , resMean  );
+	cv::imshow( "2 Result" , resMean  );
 	//cv::imshow( "resultMean Class 2 with MAYBE ", resMeanMaybe  );
 	//cv::imshow( "resultMean Class 2 with NO_SKY2 ", resMeanNo2  );
 
