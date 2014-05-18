@@ -3,6 +3,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
+#include <QFileInfo>
 #include <QDebug>
 #include <set>
 #include <queue>
@@ -47,7 +48,12 @@ int SkyDetect::detect()
 	classificateTOP();
 	createClassImage1();
 	classificate2();
+	solveClouds();
+
 	createClassImage2();
+
+	saveResultImg( mResultImg, filename );
+
 	qDebug() << "DONE ";
 	cv::waitKey(0);
 
@@ -102,6 +108,14 @@ void SkyDetect::openImage( const QString filename)
 
 	qDebug() << "type:  " << mImageIn.type() << "  " << mWidth << "x" << mHeight;
 
+}
+
+void SkyDetect::saveResultImg(const cv::Mat img, const QString filename) const
+{
+	QFileInfo file(filename);
+	QString outFileName = filename.left(filename.lastIndexOf(".")) + "_out2.jpg";
+	qDebug() << "OUTPUT: " << outFileName;
+	cv::imwrite( outFileName.toStdString(), img );
 }
 
 void SkyDetect::applyFiltersBefore()
@@ -323,7 +337,8 @@ void SkyDetect::classificateTOP()
 
 		// classi
 		mSPV[idxSP]->mClass = SKY;
-				/*
+
+		/*
 		int isSky = mSPV[idxSP]->mClass;
 		if( isSky == UNKNOWN ){
 			isSky = classificateSp( idxSP );
@@ -384,6 +399,58 @@ void SkyDetect::classificate()
 	}
 }
 
+
+void SkyDetect::solveClouds()
+{
+	std::priority_queue<int, vector<int>, compare> pqueue;
+
+	// get indexes of superpixels that are not SKY and are on border
+	int is;
+	for( is = 0; is < mSPV.size(); is++){
+		// is on the top of image
+		bool isBorder = false;
+		if( mSPV[is]->mTop == 0 ){
+			isBorder = true;
+		} else if( mSPV[is]->mLeft == 0){
+			isBorder = true;
+		} else if( mSPV[is]->mRight == mWidth - 1){
+			isBorder = true;
+		} else if( mSPV[is]->mBottom == mHeight - 1 ){
+			isBorder = true;
+		}
+
+		if( isBorder && mSPV[is]->mClass != SKY ){
+			pqueue.push( is );
+			mSPV[is]->mClass = NO_SKY2;
+		}
+	}
+
+	int isSky;
+	// while pqueue is not empty,
+	while( !pqueue.empty() ){
+		int idxSP = pqueue.top();
+		pqueue.pop();
+
+		// get adjencies
+		ADJV::const_iterator ita;
+		ADJV adjencies = mSPV[idxSP]->getAdjV();
+		for( ita = adjencies.begin(); ita != adjencies.end(); ita++){
+			isSky = mSPV[*ita]->mClass;
+			if( isSky != NO_SKY2  &&  isSky != SKY ){
+				pqueue.push(*ita);
+				mSPV[*ita]->mClass = NO_SKY2;
+			}
+		}
+	}
+
+	// if is not NO_SKY2 -> will be SKY
+	for( is = 0; is < mSPV.size(); is++){
+		if( mSPV[is]->mClass != NO_SKY2 ){
+			mSPV[is]->mClass = SKY;
+		}
+	}
+}
+
 int	SkyDetect::classificateSp(int idxSP)
 {
 
@@ -431,7 +498,6 @@ int	SkyDetect::classificateSp(int idxSP)
 void SkyDetect::createSKYandMAYBELists()
 {
 	int isSky;
-	int is;
 	std::list< int >::const_iterator its;
 
 	for( its = listMAYBE.cbegin(); its != listMAYBE.cend(); its++ ){
@@ -546,7 +612,6 @@ bool SkyDetect::similar(int is1, int is2)
 	double b2 = mean2.val[2];
 
 	double dr, dg, db;
-
 	if( r1 > r2)	dr = r1-r2;
 	else			dr = r2-r1;
 	if( g1 > g2)	dg = g1-g2;
@@ -554,7 +619,12 @@ bool SkyDetect::similar(int is1, int is2)
 	if( b1 > b2)	db = b1-b2;
 	else			db = b2-b1;
 
-	bool isSim = (dr < mParm.sim1a)  &&  (dg < mParm.sim1b)  &&  (db < mParm.sim1c);
+	double coef = (b1+b2)/512 - 0.5;
+	coef = coef < 0.0 ? 0.0 : coef;
+	//qDebug() << "coef = " << coef;
+
+	// 150,50,100
+	bool isSim = (dr < mParm.sim1a +coef*150)  &&  (dg < mParm.sim1b+coef*20)  &&  (db < mParm.sim1c +coef*100);
 	if (!isSim) {isSim = (dr < mParm.sim2a)  &&  (dg < mParm.sim2b)  &&  (db < mParm.sim2c); }
 	if (!isSim) {isSim = (dr < mParm.sim3a)  &&  (dg < mParm.sim3b)  &&  (db < mParm.sim3c); }
 
@@ -595,8 +665,8 @@ void SkyDetect::createClassImage1()
 			}
 		}
 	}
-	cv::imshow( "1 SKY    " , resMean  );
-	cv::imshow( "1 MAYBE ", resMeanMaybe  );
+	//cv::imshow( "1 SKY    " , resMean  );
+	//cv::imshow( "1 MAYBE ", resMeanMaybe  );
 
 }
 
@@ -640,7 +710,33 @@ void SkyDetect::createClassImage2()
 
 
 	cv::imshow( "2 Result" , resMean  );
+	createResultImg( resMean );
+
 	//cv::imshow( "resultMean Class 2 with MAYBE ", resMeanMaybe  );
 	//cv::imshow( "resultMean Class 2 with NO_SKY2 ", resMeanNo2  );
+
+}
+
+void SkyDetect::createResultImg( const cv::Mat resSPimg )
+{
+
+	mResultImg = cv::Mat::zeros(cv::Size( mWidth, mHeight), CV_8UC3);
+	cv::Mat mask = cv::Mat::zeros(cv::Size( mWidth, mHeight), CV_8UC1);
+	cv::Mat dmask = cv::Mat(cv::Size( mWidth, mHeight), CV_8UC1);
+
+	cv::threshold(resSPimg, mask, 0, 255, cv::THRESH_BINARY );
+
+	cv::Mat strElmnt = getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(7,7));
+
+	// dilate mast
+	cv::dilate(mask, dmask, strElmnt);
+	cv::bitwise_xor( mask, dmask, mask );
+	cv::bitwise_not( mask, mask);
+
+	cv::imshow( "mask" , mask  );
+
+	mImageIn.copyTo(mResultImg, mask);
+
+	cv::imshow( "Result" , mResultImg  );
 
 }

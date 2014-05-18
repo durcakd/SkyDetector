@@ -12,7 +12,7 @@ SkyDetectorDialog::SkyDetectorDialog(QWidget *parent) :
 	_startB		= new QPushButton(tr("Start"));
 	_openFileB	= new QPushButton(tr("Open"));
 
-	_fileName = "C:\\Users\\Durcak\\Desktop\\SLICO\\hrad1.jpg";
+	_fileName = "C:\\Users\\Durcak\\Desktop\\SLICO\\hrad2c.jpg";
 	_spcountLE = new QLineEdit("1000");
 	_compactnessLE = new QLineEdit("10.0");
 	_sky1SB		= new SpinBox(100);
@@ -99,7 +99,7 @@ SkyDetectorDialog::SkyDetectorDialog(QWidget *parent) :
 	rightLayout->addLayout(paramLayout3);
 
 	QHBoxLayout *mainLayout = new QHBoxLayout;
-	mainLayout->addLayout(paramLayout1);
+	//mainLayout->addLayout(paramLayout1);
 	mainLayout->addLayout(rightLayout);
 
 	setLayout( mainLayout );

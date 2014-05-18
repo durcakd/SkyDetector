@@ -40,8 +40,11 @@ public:
 	int		classificateSp(int idxSP);
 	void	createClassImage1();
 	void	createClassImage2();
+	void	createResultImg( const cv::Mat resSPimg );
+	void	saveResultImg(const cv::Mat img, const QString filename) const;
 
 	void	classificate2();
+	void	solveClouds();
 	void	createSKYandMAYBELists();
 	bool	similar(int is1, int is2);
 
@@ -60,6 +63,7 @@ private:
 	cv::Mat mImageIn;
 	cv::Mat mSlicoRes;
 	cv::Mat mPattern16;
+	cv::Mat mResultImg;
 
 
 	std::list< int > listMAYBE;
