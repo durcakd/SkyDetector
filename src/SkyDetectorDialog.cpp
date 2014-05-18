@@ -94,7 +94,7 @@ SkyDetectorDialog::SkyDetectorDialog(QWidget *parent) :
 
 
 	QVBoxLayout *rightLayout = new QVBoxLayout;
-	rightLayout->addLayout(paramLayout2);
+	//rightLayout->addLayout(paramLayout2);
 	rightLayout->addStretch();
 	rightLayout->addLayout(paramLayout3);
 

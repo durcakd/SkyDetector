@@ -46,7 +46,7 @@ int SkyDetect::detect()
 
 	//classificate();
 	classificateTOP();
-	createClassImage1();
+	//createClassImage1();
 	classificate2();
 	solveClouds();
 
@@ -221,8 +221,9 @@ void SkyDetect::initSPixelAdj16()
 
 	// for all superpixels
 	SPV::const_iterator its;
+	int counter = mParm.spcount;
 	for( its = mSPV.begin(); its != mSPV.end(); its++){
-
+		if(counter-- % 101 == 0 ) qDebug() << "SP " << counter;
 		//qDebug() << " "  << (*its)->getName() << "   -   " << (*its)->getPixelVSize() << "   " << (*its)->getAdjVSize();
 
 		// create mask
@@ -329,9 +330,9 @@ void SkyDetect::classificateTOP()
 		int idxSP = pqueue.top();
 		pqueue.pop();
 
-		cv::Scalar meanHSV = mSPV[idxSP]->getMeanHSV();
-		cv::Scalar stdDev = mSPV[idxSP]->getStdDev();
-		qDebug() << "TOP mean: " << meanHSV.val[0] << " " << meanHSV.val[1] << " " << meanHSV.val[2] <<  "         "  << stdDev.val[0] << " " << stdDev.val[1] << " " << stdDev.val[2];
+		//cv::Scalar meanHSV = mSPV[idxSP]->getMeanHSV();
+		//cv::Scalar stdDev = mSPV[idxSP]->getStdDev();
+		//qDebug() << "TOP mean: " << meanHSV.val[0] << " " << meanHSV.val[1] << " " << meanHSV.val[2] <<  "         "  << stdDev.val[0] << " " << stdDev.val[1] << " " << stdDev.val[2];
 
 
 
@@ -675,6 +676,7 @@ void SkyDetect::createClassImage2()
 	cv::Mat resMean = cv::Mat::zeros(cv::Size( mWidth, mHeight), CV_8UC3);
 	cv::Mat resMeanMaybe = cv::Mat::zeros(cv::Size( mWidth, mHeight), CV_8UC3);
 	cv::Mat resMeanNo2 = cv::Mat::zeros(cv::Size( mWidth, mHeight), CV_8UC3);
+	cv::Mat pattern= cv::Mat::zeros(cv::Size( mWidth, mHeight), CV_8UC3);
 
 	SPV::const_iterator its;
 	for( its = mSPV.begin(); its != mSPV.end(); its++){
@@ -703,13 +705,16 @@ void SkyDetect::createClassImage2()
 					resMeanNo2.data[ndx + 1] = mean.val[1];
 					resMeanNo2.data[ndx + 2] = mean.val[2];
 				}
+				pattern.data[ndx + 0] = mean.val[0];
+				pattern.data[ndx + 1] = mean.val[1];
+				pattern.data[ndx + 2] = mean.val[2];
 
 			}
 		}
 	}
 
-
-	cv::imshow( "2 Result" , resMean  );
+	cv::imshow( "Mean " , pattern  );
+	//cv::imshow( "2 Result" , resMean  );
 	createResultImg( resMean );
 
 	//cv::imshow( "resultMean Class 2 with MAYBE ", resMeanMaybe  );
@@ -733,7 +738,7 @@ void SkyDetect::createResultImg( const cv::Mat resSPimg )
 	cv::bitwise_xor( mask, dmask, mask );
 	cv::bitwise_not( mask, mask);
 
-	cv::imshow( "mask" , mask  );
+	cv::imshow( "Mask" , mask  );
 
 	mImageIn.copyTo(mResultImg, mask);
 
